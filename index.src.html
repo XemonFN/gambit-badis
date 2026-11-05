@@ -1,0 +1,2191 @@
+<title>Gambit Badis</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : en-tête blanc avec une bande camouflage, puis trois vues (Parties, Analyse, Entraînement).
+   Analyse et Entraînement : échiquier à gauche, panneau du coach à droite (une colonne sur téléphone).
+   Direction : vestiaire de club anglais (marine, vert anglais, bordeaux, serif classique),
+   étiquettes cousues en machine à écrire, et une touche de camouflage vert. Thème clair unique. */
+:root{
+  --paper:#f5f4f0; --surface:#ffffff; --surface-2:#efede7; --ink:#141414; --muted:#6c6961; --line:#e1ded6; --line-2:#cfcbc1;
+  --navy:#1c2b4a; --green:#23402f; --burgundy:#7a2433; --accent:#1c2b4a; --accent-ink:#ffffff; --accent-soft:rgba(28,43,74,.08); --accent-2:#3a5a8c;
+  --camo-1:#3b4228; --camo-2:#5f6b3d; --camo-3:#8a8f5c; --camo-4:#b5b38a;
+  --sq-l:#eeeadf; --sq-d:#6f8968; --sq-hl:rgba(246,214,90,.6); --sq-sel:rgba(28,43,74,.35);
+  --c-brillant:#26c2a3; --c-unique:#749bbf; --c-meilleur:#81b64c; --c-excellent:#96bc4b; --c-bon:#96af8b; --c-theorie:#a88865; --c-force:#96af8b;
+  --c-imprecision:#f0b93a; --c-erreur:#ff9a4a; --c-manquee:#ff7769; --c-gaffe:#e6392a;
+  --win:#5c8f2e; --loss:#c23a2c; --draw:#8b877c;
+  --f-display:"Cormorant Garamond","Garamond","Times New Roman",serif;
+  --f-body:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:4px;
+  --camo:linear-gradient(90deg,var(--camo-1),var(--camo-2),var(--camo-3),var(--camo-2));
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed}
+button:focus-visible,a:focus-visible,textarea:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+a{color:var(--navy)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:600;letter-spacing:-.005em}
+h2{font-size:1.55rem;line-height:1.15}
+.eyebrow,.secttl{font-family:var(--f-mono);font-size:.7rem;text-transform:lowercase;letter-spacing:.04em;font-weight:500;color:var(--muted)}
+.secttl::before,.eyebrow::before{content:"« "}.secttl::after,.eyebrow::after{content:" »"}
+
+/* étiquette cousue */
+.tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.7rem;font-weight:500;letter-spacing:.03em;background-color:#fff;border:1px solid var(--line-2);padding:4px 12px;position:relative;white-space:nowrap;
+  background-image:radial-gradient(circle,#9a968c 0 1px,transparent 1.4px),radial-gradient(circle,#9a968c 0 1px,transparent 1.4px),radial-gradient(circle,#9a968c 0 1px,transparent 1.4px),radial-gradient(circle,#9a968c 0 1px,transparent 1.4px);
+  background-size:6px 6px;background-repeat:no-repeat;background-position:2px 2px,calc(100% - 2px) 2px,2px calc(100% - 2px),calc(100% - 2px) calc(100% - 2px)}
+.tag.dark{background-color:var(--navy);color:#fff;border-color:var(--navy);
+  background-image:radial-gradient(circle,rgba(255,255,255,.5) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(255,255,255,.5) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(255,255,255,.5) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(255,255,255,.5) 0 1px,transparent 1.4px)}
+
+/* en-tête */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:#fff}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.top::after{content:"";display:block;height:6px;background:var(--camo);background-size:180px 180px}
+.top-in{max-width:1220px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0}
+.brand b{font-family:var(--f-display);font-style:italic;font-weight:600;font-size:1.75rem;line-height:1;letter-spacing:-.01em;white-space:nowrap}
+.brand .tag{font-size:.66rem;padding:3px 10px}
+.brand .who{font-family:var(--f-mono);font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;gap:22px;max-width:100%;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:6px 0;font-weight:600;font-size:.92rem;white-space:nowrap;display:flex;gap:6px;align-items:center;color:var(--muted);border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.tabs .pill{background:var(--burgundy);color:#fff;font-size:.66rem;padding:0 6px;line-height:1.6;font-weight:700;font-family:var(--f-mono)}
+@media (max-width:560px){.top-in{gap:8px}.tabs{width:100%;justify-content:space-between;gap:8px}.brand b{font-size:1.5rem}}
+
+main{max-width:1220px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 56px}
+.view{display:grid;gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--ink);background:transparent;padding:9px 16px;border-radius:0;font-weight:600;font-size:.86rem;display:inline-flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.01em}
+.btn:hover{background:var(--ink);color:#fff}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.primary:hover{background:#13203a}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff}
+.btn:disabled{opacity:.35;pointer-events:none}
+.btn.small{padding:6px 11px;font-size:.78rem}
+.btn.ghost{border-color:transparent;text-decoration:underline;text-underline-offset:3px;padding-inline:4px}
+.btn.ghost:hover{background:transparent;color:var(--ink)}
+.note{font-size:.84rem;color:var(--muted)}
+.err{color:var(--loss);font-size:.86rem}
+.status{font-size:.8rem;color:var(--muted)}
+.empty{border:1px dashed var(--line-2);padding:20px;color:var(--muted);font-size:.9rem;background:var(--surface)}
+textarea,input[type=text],select{width:100%;border:1px solid var(--line-2);border-radius:0;background:#fff;color:var(--ink);padding:9px 10px;font-family:var(--f-mono);font-size:.78rem}
+textarea{min-height:110px;resize:vertical}
+.prog{height:3px;background:var(--surface-2);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--green);width:0;transition:width .2s}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- Parties ---------- */
+.welcome{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.welcome h1{font-size:clamp(2.2rem,6vw,3.6rem);font-weight:500;line-height:1}
+.welcome h1 em{font-style:italic;color:var(--green)}
+.welcome .lede{color:var(--muted);max-width:54ch;margin-top:8px}
+.syncchip{display:inline-flex;align-items:center;gap:8px}
+.syncchip i{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.syncchip.on i{background:var(--win)}
+.syncchip.busy i{background:var(--c-imprecision);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--ink);background:var(--surface)}
+.quick button{border:0;background:transparent;padding:16px 18px;text-align:left;display:grid;gap:4px;border-right:1px solid var(--line)}
+.quick button:last-child{border-right:0}
+.quick button:hover{background:var(--surface-2)}
+.quick b{font-family:var(--f-display);font-size:2.2rem;font-weight:600;line-height:1;font-variant-numeric:lining-nums tabular-nums}
+.quick span{font-size:.8rem;color:var(--muted)}
+.quick .go{font-family:var(--f-mono);font-size:.72rem;color:var(--navy);font-weight:600}
+@media (max-width:620px){.quick{grid-template-columns:minmax(0,1fr)}.quick button{border-right:0;border-bottom:1px solid var(--line)}.quick button:last-child{border-bottom:0}}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line-2);background:#fff;padding:4px 11px;font-size:.78rem;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.glist{display:grid;margin-top:14px;border-top:1px solid var(--ink)}
+.grow{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 4px;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;width:100%}
+.grow:hover{background:var(--surface-2)}
+.res{width:28px;height:28px;display:grid;place-items:center;font-weight:700;font-family:var(--f-mono);font-size:.8rem;color:#fff}
+.res.V{background:var(--green)}.res.D{background:var(--burgundy)}.res.N{background:var(--draw)}.res.\?{background:var(--muted)}
+.gmain{min-width:0}
+.gmain .who{font-weight:600;display:flex;gap:7px;align-items:center;min-width:0}
+.gmain .who span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ink);flex:none}
+.dot.w{background:#fff}.dot.b{background:var(--ink)}
+.gmain .sub{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gside{text-align:right;font-size:.74rem;color:var(--muted);font-family:var(--f-mono)}
+.gside .acc{font-weight:600;color:var(--ink);font-size:.95rem}
+.tag-ex{font-family:var(--f-mono);font-size:.62rem;border:1px solid var(--line-2);padding:0 5px;color:var(--muted);font-weight:500}
+details.card summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;font-weight:600}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:"+";font-family:var(--f-mono);color:var(--muted)}
+details.card[open] summary::after{content:"–"}
+details.card > div{display:grid;gap:10px;margin-top:12px}
+
+/* ---------- Échiquier ---------- */
+.boardcol{display:grid;gap:10px;min-width:0}
+.pstrip{display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:0;padding-left:28px}
+.pl{display:flex;gap:10px;align-items:center;min-width:0}
+.av{width:34px;height:34px;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-style:italic;font-size:1.2rem;flex:none;background:var(--surface-2);border:1px solid var(--line-2);color:var(--muted)}
+.av.me{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pl-txt{min-width:0;display:grid;gap:1px}
+.pl-nm{font-weight:600;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-nm .muted{font-weight:500}
+.caps{display:flex;align-items:center;height:16px;font-size:.72rem;color:var(--muted);font-family:var(--f-mono)}
+.pc.mini{position:static;display:inline-block;width:17px;height:17px;inset:auto;margin-right:-4px}
+.caps b{margin-left:9px;font-weight:600}
+.clk{font-family:var(--f-mono);font-size:1rem;background:#fff;padding:4px 10px;font-weight:600;border:1px solid var(--line-2);color:var(--muted);font-variant-numeric:tabular-nums}
+.clk.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.bwrap{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px}
+.evalbar{position:relative;overflow:hidden;background:#403d39;border:1px solid var(--ink)}
+.evalbar i{position:absolute;left:0;right:0;bottom:0;background:#fff;transition:height .45s cubic-bezier(.3,.8,.3,1)}
+.evalbar.flip i{top:0;bottom:auto}
+.evalbar b{position:absolute;left:0;right:0;font-size:8px;letter-spacing:-.04em;font-family:var(--f-mono);text-align:center;font-weight:600;bottom:3px;color:#403d39}
+.evalbar.blk b{bottom:auto;top:3px;color:#fff}
+.evalbar.flip b{bottom:auto;top:3px}.evalbar.flip.blk b{top:auto;bottom:3px}
+.board{position:relative;aspect-ratio:1/1;width:100%;max-width:100%;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border:1px solid var(--ink);box-shadow:0 0 0 5px #fff,0 0 0 6px var(--line-2),0 18px 40px rgba(20,20,20,.12);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.board[data-b="marine"]{--sq-l:#e9e7e1;--sq-d:#4c6185}
+.board[data-b="atelier"]{--sq-l:#f3f2ee;--sq-d:#c4c1b8}
+.board[data-b="bois"]{--sq-l:#f0d9b5;--sq-d:#b58863}
+.board[data-b="camo"]{--sq-l:#e7e4d3;--sq-d:#6e7b45}
+.board[data-b="camo"] .sq.d{background:var(--camo);background-size:160px 160px}
+.sq{position:relative;border:0;padding:0;margin:0;min-width:0;min-height:0}
+.sq.l{background:var(--sq-l)}.sq.d{background:var(--sq-d)}
+.sq.hl::before{content:"";position:absolute;inset:0;background:var(--hlc,var(--sq-hl));opacity:.55}
+.sq.sel::before{content:"";position:absolute;inset:0;background:var(--sq-sel)}
+.sq.chk::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(230,57,42,.95) 0,rgba(230,57,42,.5) 40%,transparent 72%)}
+.sq.tgt::after{content:"";position:absolute;width:30%;height:30%;left:35%;top:35%;border-radius:50%;background:rgba(20,20,20,.25)}
+.sq.tgt.cap::after{width:88%;height:88%;left:6%;top:6%;background:transparent;border:5px solid rgba(20,20,20,.25)}
+.sq.hint::before{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 4px var(--c-imprecision)}
+.pc{position:absolute;inset:3%;background-size:contain;background-repeat:no-repeat;background-position:center;pointer-events:none;z-index:2;will-change:transform}
+.coord{position:absolute;font-size:clamp(8px,1.6vw,11px);font-weight:600;font-family:var(--f-mono);pointer-events:none;z-index:1;line-height:1}
+.coord.f{right:3px;bottom:2px}.coord.r{left:3px;top:3px}
+.sq.l .coord{color:var(--sq-d)}.sq.d .coord{color:var(--sq-l)}
+.board[data-b="camo"] .sq.d .coord{color:#fff}
+.badge-sq{position:absolute;right:-8%;top:-8%;width:44%;height:44%;max-width:26px;max-height:26px;z-index:5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));animation:pop .28s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+.arrows{position:absolute;inset:0;pointer-events:none;z-index:4}
+.navbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:center}
+.tools{display:flex;gap:6px}
+.tools .btn{flex:1;padding:8px 6px;font-size:.72rem;font-family:var(--f-mono);font-weight:500;border-color:var(--line-2);color:var(--muted)}
+.tools .btn:hover{background:var(--surface-2);color:var(--ink)}
+.tools .btn[aria-pressed="false"]{opacity:.5}
+.nowbox{border:1px solid var(--accent-2);background:rgba(58,90,140,.06);padding:10px 12px;display:grid;gap:6px}
+.nowbox .bl{display:flex;align-items:center;gap:8px;font-weight:600;flex-wrap:wrap}
+.nowdot{width:20px;height:20px;border-radius:50%;background:var(--accent-2);display:grid;place-items:center;color:#fff;font-size:.7rem;font-weight:700;flex:none}
+.navbar .btn{padding:11px 8px;font-size:1rem}
+.navbar .tools{display:flex;gap:6px}
+.navbar .tools .btn{padding:11px 10px;font-size:.74rem;font-family:var(--f-mono);font-weight:500;border-color:var(--line-2);color:var(--muted)}
+.navbar .tools .btn:hover{background:var(--surface-2);color:var(--ink)}
+.navbar .tools .btn[aria-pressed="false"]{opacity:.5}
+.boardhint{text-align:center;font-size:.74rem;color:var(--muted);font-family:var(--f-mono)}
+
+/* ---------- Analyse ---------- */
+.ana{display:grid;grid-template-columns:minmax(0,600px) minmax(0,1fr);gap:26px;align-items:start}
+@media (max-width:960px){.ana{grid-template-columns:minmax(0,1fr)}}
+@media (min-width:961px){.ana .boardcol,.drill .boardcol{position:sticky;top:calc(env(safe-area-inset-top,0px) + 86px)}}
+.rpanel{border:1px solid var(--ink);background:var(--surface);min-width:0;display:grid}
+.rp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.rp-title{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}
+.rp-title b{font-family:var(--f-display);font-style:italic;font-weight:600;font-size:1.45rem;line-height:1}
+.rp-graph{padding:12px 16px 2px;position:relative}
+.graph{width:100%;height:96px;display:block;cursor:crosshair;border:1px solid var(--line)}
+.gtip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:.72rem;font-family:var(--f-mono);padding:3px 8px;white-space:nowrap;transform:translate(-50%,-110%);z-index:3}
+.rp-body{padding:14px 16px 16px;display:grid;gap:14px;min-width:0}
+.rp-foot{border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap}
+.rp-foot .btn{flex:1;min-width:0}
+.varbar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--navy);color:#fff;padding:9px 12px;font-size:.84rem;flex-wrap:wrap}
+.varbar b{font-family:var(--f-mono);font-weight:500;font-size:.78rem}
+.varbar button{border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;padding:5px 10px;font-size:.78rem;font-weight:600}
+.varbar button:hover{background:#fff;color:var(--navy)}
+
+/* coach */
+.coachrow{display:grid;grid-template-columns:46px minmax(0,1fr);gap:12px;align-items:start}
+.coachav{width:46px;height:46px;display:grid;place-items:center;background:var(--green);color:#fff;font-size:1.7rem;line-height:1;font-family:"DejaVu Sans","Segoe UI Symbol","Apple Symbols",serif;border:1px solid var(--green);box-shadow:inset 0 0 0 3px #fff}
+.bubble{position:relative;background:#fff;color:var(--ink);border:1px solid var(--line-2);padding:12px 14px;display:grid;gap:9px;min-width:0}
+.bubble::before{content:"";position:absolute;left:-8px;top:14px;width:14px;height:14px;background:#fff;border-left:1px solid var(--line-2);border-bottom:1px solid var(--line-2);transform:rotate(45deg)}
+.bubble .bh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bubble .bt{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.02rem;min-width:0;flex-wrap:wrap}
+.bubble .bt .mv{font-family:var(--f-mono);font-weight:600}
+.bubble p{margin:0;line-height:1.5;font-size:.92rem}
+.bubble ul{margin:0;padding-left:18px;display:grid;gap:3px;font-size:.9rem}
+.dctx{font-size:.86rem;color:var(--muted);margin:0}
+.evchip{font-family:var(--f-mono);font-size:.76rem;font-weight:600;padding:3px 8px;white-space:nowrap;border:1px solid var(--ink)}
+.evchip.w{background:#fff;color:var(--ink)}
+.evchip.b{background:#403d39;color:#fff;border-color:#403d39}
+.ico{display:inline-grid;place-items:center;flex:none;vertical-align:middle}
+.ico svg{display:block}
+.meta-chips{display:flex;gap:6px;flex-wrap:wrap}
+.mchip{font-family:var(--f-mono);font-size:.7rem;background:var(--surface-2);padding:2px 8px;color:var(--muted)}
+.mchip.warn{background:rgba(230,57,42,.1);color:#a62a1e}
+.bestbox{border:1px solid var(--line);background:var(--paper);padding:10px 12px;display:grid;gap:6px}
+.bestbox .bl{display:flex;align-items:center;gap:8px;font-weight:600;flex-wrap:wrap}
+.bestline{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);overflow-x:auto;white-space:nowrap}
+.bbtns{display:flex;gap:6px;flex-wrap:wrap}
+.bbtn{border:1px solid var(--ink);padding:6px 12px;font-size:.8rem;font-weight:600;background:var(--ink);color:#fff}
+.bbtn.alt{background:transparent;color:var(--ink)}
+.bbtn.gold,.bbtn.green{background:var(--green);border-color:var(--green);color:#fff}
+.bbtn:disabled{opacity:.4}
+.aiout{font-size:.9rem;line-height:1.55;border-left:2px solid var(--green);padding:2px 0 2px 12px;display:grid;gap:6px}
+.aiout p{margin:0}.aiout ul{margin:0;padding-left:18px}.aiout h4{margin:4px 0 0;font-family:var(--f-display);font-size:1.05rem}
+
+/* liste des coups */
+.moves{display:grid;grid-template-columns:40px minmax(0,1fr) minmax(0,1fr);font-family:var(--f-mono);font-size:.84rem;max-height:280px;overflow-y:auto;border:1px solid var(--line)}
+.moves .no{color:var(--muted);padding:6px 8px;text-align:right;font-size:.74rem;align-self:center;background:var(--paper)}
+.moves button{border:0;background:transparent;text-align:left;padding:6px 8px;display:flex;align-items:center;gap:6px;font-family:inherit;font-size:inherit;min-width:0}
+.moves button:hover{background:var(--surface-2)}
+.moves button.cur{background:var(--navy);color:#fff;font-weight:600}
+
+/* bilan */
+.accs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--ink)}
+.accs > div{padding:14px;display:grid;gap:2px;min-width:0}
+.accs > div + div{border-left:1px solid var(--ink)}
+.accs .nm{font-size:.78rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.accs b{font-family:var(--f-display);font-weight:600;font-size:2.8rem;line-height:1;font-variant-numeric:lining-nums tabular-nums}
+.accs .me b{color:var(--green)}
+.accs span.l{font-family:var(--f-mono);font-size:.68rem;color:var(--muted)}
+.accs .gr{display:grid;gap:1px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line-2)}
+.accs .gr strong{font-family:var(--f-display);font-weight:600;font-size:1.9rem;line-height:1;font-variant-numeric:lining-nums tabular-nums}
+.accs em{font-style:normal;font-weight:600}.accs em.up{color:var(--win)}.accs em.down{color:var(--loss)}
+.ctable{display:grid;grid-template-columns:minmax(0,1fr) 46px 46px;align-items:center;font-size:.88rem}
+.ctable > *{padding:6px 4px;border-bottom:1px solid var(--line)}
+.ctable .hd{font-family:var(--f-mono);font-size:.68rem;color:var(--muted);text-align:center}
+.ctable .lab{display:flex;align-items:center;gap:9px;font-weight:600}
+.ctable .n{text-align:center;font-family:var(--f-mono);font-weight:600}
+.ctable .n.z{color:#c9c5bb}
+.ctable .lab.dim{color:var(--muted);font-weight:500}
+
+/* ---------- Entraînement ---------- */
+.drill{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:26px;align-items:start}
+@media (max-width:900px){.drill{grid-template-columns:minmax(0,1fr)}}
+.boxes{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line)}
+.boxes div{padding:9px 4px;text-align:center}
+.boxes div + div{border-left:1px solid var(--line)}
+.boxes b{display:block;font-family:var(--f-display);font-size:1.7rem;font-weight:600;line-height:1.1;font-variant-numeric:lining-nums tabular-nums}
+.boxes span{font-family:var(--f-mono);font-size:.64rem;color:var(--muted)}
+.feedback{padding:9px 12px;font-weight:600;font-size:.88rem;border-left:3px solid}
+.feedback.ok{background:rgba(92,143,46,.1);color:#3f6a1c;border-color:var(--win)}
+.feedback.ko{background:rgba(194,58,44,.08);color:#9c2a1f;border-color:var(--loss)}
+.feedback.info{background:var(--accent-soft);color:var(--navy);border-color:var(--navy)}
+.cmp{display:grid;gap:6px}
+.cmp > div{display:flex;align-items:center;gap:8px;font-size:.88rem;background:var(--paper);border:1px solid var(--line);padding:6px 10px}
+.cmp > div > span.cl{flex:1;min-width:0}
+.dline{display:grid;gap:10px}
+.lseq{display:flex;flex-wrap:wrap;gap:4px;font-family:var(--f-mono);font-size:.84rem}
+.lmv{border:1px solid var(--line-2);background:#fff;padding:4px 8px;display:inline-flex;align-items:center;gap:5px}
+.lmv .no{color:var(--muted);font-size:.74rem}
+.lmv.cur{background:var(--navy);color:#fff;border-color:var(--navy)}
+.lmv.cur .no{color:rgba(255,255,255,.7)}
+.lstatus{font-size:.88rem;font-weight:600}
+.dnav{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.dnav .btn{flex:1;min-width:0}
+.dnav .btn.ghost{flex:0 0 auto}
+#drillCard{padding:16px;gap:14px}
+.importcard{display:grid;gap:10px;border-color:var(--ink)}
+.steps{margin:0;padding-left:20px;display:grid;gap:3px;font-size:.86rem}
+.pastezone{min-height:64px;font-family:var(--f-body);font-size:.95rem;text-align:center;padding:18px 10px;border:1.5px dashed var(--line-2);background:var(--paper)}
+.pastezone:focus{border-color:var(--navy);background:#fff}
+.tabbar{display:none}
+@media (max-width:700px){
+  body{font-size:15px}
+  .top-in{padding-block:10px}
+  .tabs,.brand .tag,.brand .who{display:none}
+  .brand b{font-size:1.55rem}
+  main{padding-block:16px calc(84px + env(safe-area-inset-bottom,0px))}
+  .tabbar{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line-2);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  .tabbar button{position:relative;border:0;background:transparent;display:grid;justify-items:center;gap:2px;padding:6px 0;color:var(--muted);font-size:.68rem;font-weight:600}
+  .tabbar svg{width:24px;height:24px}
+  .tabbar button[aria-selected="true"]{color:var(--ink)}
+  .tabbar button[aria-selected="true"]::before{content:"";position:absolute;top:-7px;left:30%;right:30%;height:2px;background:var(--ink)}
+  .tabbar .pill{position:absolute;top:2px;left:calc(50% + 8px);background:var(--burgundy);color:#fff;font-style:normal;font-size:.6rem;padding:0 5px;line-height:1.6;font-family:var(--f-mono)}
+  .welcome h1{font-size:2.1rem}
+  .welcome .syncchip{display:none}
+  .split{gap:14px}
+  #v-parties .split{display:flex;flex-direction:column;align-items:stretch}
+  #v-parties .split > .view{display:contents}
+  #importCard{order:1}#v-parties .split > .card{order:2}#v-parties details.card{order:3}
+  #macSync{display:none}
+  .card{padding:14px}
+  .grow{grid-template-columns:28px minmax(0,1fr) auto;gap:10px;padding:13px 2px}
+  /* analyse : échiquier bord à bord, navigation collée en bas */
+  .ana,.drill{gap:14px}
+  .bwrap{grid-template-columns:10px minmax(0,1fr);gap:4px}
+  .evalbar b{display:none}
+  .board{box-shadow:none}
+  .pstrip{padding-left:14px;padding-right:4px}
+  .pstrip .av{width:28px;height:28px;font-size:1rem}
+  .clk{font-size:.9rem;padding:3px 8px}
+  #v-analyse .navbar{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:19;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:6px max(10px,env(safe-area-inset-right,0px)) 6px max(10px,env(safe-area-inset-left,0px));gap:6px}
+  #v-analyse .navbar .btn{padding:10px 4px}
+  body[data-view="analyse"] main{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+  .tools{padding-inline:4px}
+  .boardhint{display:none}
+  .rp-foot{display:none}
+  .rp-head{padding:12px 14px}
+  .rp-body{padding:12px 14px}
+  .rp-graph{padding:10px 14px 0}
+  .graph{height:70px}
+  .coachrow{grid-template-columns:minmax(0,1fr)}
+  .coachav{display:none}
+  .bubble::before{display:none}
+  .moves{max-height:200px}
+  .dnav{padding-inline:4px}
+  .dnav .btn{padding:12px 6px}
+  .accs b{font-size:2.3rem}
+  .quick{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .quick button{border-bottom:0;border-right:1px solid var(--line);padding:10px 10px}
+  .quick button:last-child{border-right:0}
+  .quick b{font-size:1.45rem}
+  .quick span{font-size:.7rem;line-height:1.3}
+  .quick .go{font-size:.62rem}
+  #qLast,#qAccSub{display:none}
+  .welcome .lede{font-size:.9rem}
+  /* l'échiquier, puis directement le coach, puis les réglages */
+  .ana .boardcol,.drill .boardcol{display:contents}
+  .ana,.drill{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+  #pTop{order:1}#v-analyse .bwrap{order:2}#pBot{order:3}#v-analyse .rpanel{order:4;margin-top:6px}#v-analyse .tools{order:5}
+  #v-entrainement .drill > .view{display:contents}
+  #v-analyse .rpanel{display:flex;flex-direction:column}#v-analyse .rp-head{order:1}#varbar{order:2}#anaProg{order:2}#rpSum,#rpMove{order:3}#v-analyse .rp-graph{order:4;padding-bottom:12px}#rpFoot{order:5}
+  #dTop{order:1}#dboard{order:2;margin-inline:-10px;width:calc(100% + 20px);max-width:none}#drillCard{order:3}#dNav{order:4}#v-entrainement .card{order:5}
+  .ana,.drill{min-width:0;width:100%}
+  #dTop{min-width:0;max-width:100%;overflow:hidden}#dTop .row > :last-child:not(button){display:none}
+  #dTop .row{flex-wrap:nowrap}#dTop .secttl{font-size:.64rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #v-analyse .bwrap{margin-inline:-12px}
+  .rp-title b{font-size:1.15rem}
+  .pstrip{padding-left:4px}
+  .accs .gr strong{font-size:1.6rem}
+}
+.standalone #aiMove,.standalone #dWhy,.standalone #aiGame{display:none!important}
+.standalone #macSync{display:block!important;order:0!important}
+.standalone #importCard{order:4!important}
+/*PIECES*/
+</style>
+
+<header class="top"><div class="top-in">
+  <div class="brand"><b>Gambit Badis</b><span class="tag">club d’échecs privé</span><span class="who" id="whoami">CalcinepasCalcinable</span></div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="parties" aria-selected="true">Parties</button>
+    <button role="tab" data-tab="analyse" aria-selected="false">Analyse</button>
+    <button role="tab" data-tab="entrainement" aria-selected="false">Entraînement <span class="pill" id="duePill" hidden>0</span></button>
+  </nav>
+</div></header>
+
+<main>
+  <!-- PARTIES -->
+  <section class="view" id="v-parties">
+    <div class="welcome">
+      <div>
+        <h1 id="heroTitle">Bonsoir, <em>Badis</em>.</h1>
+        <div class="lede" id="heroLede">Tes parties chess.com arrivent toutes seules, le moteur les analyse, et tes erreurs deviennent tes exercices.</div>
+      </div>
+      <span class="tag syncchip" id="syncChip"><i></i><span>Import auto sur ton Mac</span></span>
+    </div>
+    <div class="quick" id="quick">
+      <button id="heroLast"><span class="go">→ analyser</span><b id="qLastRes">–</b><span id="qLast">Ta dernière partie</span></button>
+      <button id="heroTrain"><span class="go">→ s’entraîner</span><b id="qDue">0</b><span>Erreurs à retravailler</span></button>
+      <button id="heroAcc" tabindex="-1" style="cursor:default"><span class="go">précision moyenne</span><b id="qAcc">–</b><span id="qAccSub">sur tes 10 dernières parties</span></button>
+    </div>
+    <div class="split">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2>Tes parties</h2>
+          <div class="chips" id="gfilters">
+            <button class="chip" data-f="all" aria-pressed="true">Toutes</button>
+            <button class="chip" data-f="V" aria-pressed="false">Victoires</button>
+            <button class="chip" data-f="D" aria-pressed="false">Défaites</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px;justify-content:space-between">
+          <span class="status" id="batchStatus">Analyse automatique en attente</span>
+          <button class="btn small ghost" id="batchBtn">Mettre en pause</button>
+        </div>
+        <div class="prog" id="batchProg" style="margin-top:6px"><i></i></div>
+        <div class="glist" id="glist"></div>
+      </div>
+      <div class="view" style="gap:14px">
+        <div class="card importcard" id="importCard">
+          <span class="secttl">ajouter une partie</span>
+          <ol class="steps">
+            <li>Dans l’app chess.com, ouvre ta partie.</li>
+            <li>Touche <b>Partager</b>, puis <b>PGN</b>, puis <b>Copier</b>.</li>
+            <li>Reviens ici, touche la zone ci-dessous et choisis <b>Coller</b>.</li>
+          </ol>
+          <textarea id="pgnIn" class="pastezone" placeholder="Touche ici, puis Coller" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+          <div class="row"><button class="btn small" id="pgnBtn">Importer</button><span class="status" id="pgnStatus">L’import se fait tout seul dès que tu colles.</span></div>
+        </div>
+        <details class="card" id="macSync">
+          <summary>Import automatique (Mac)</summary>
+          <div>
+            <div class="note" id="syncNote">Dans l’app Claude sur ton Mac, toutes tes nouvelles parties arrivent seules à l’ouverture puis toutes les 30 minutes.</div>
+            <button class="btn" id="syncBtn">Synchroniser maintenant</button>
+            <div class="status" id="syncStatus"></div>
+          </div>
+        </details>
+        <details class="card">
+          <summary>Réglages</summary>
+          <div>
+            <label class="note" for="userIn">Pseudo chess.com</label>
+            <div class="row" style="flex-wrap:nowrap"><input type="text" id="userIn" value="CalcinepasCalcinable"><button class="btn small" id="userSave">OK</button></div>
+            <label class="note" for="depthSel">Profondeur d’analyse</label>
+            <select id="depthSel">
+              <option value="rapide">Rapide (≈ 20 s par partie)</option>
+              <option value="profonde">Profonde (≈ 1 min par partie, plus précis)</option>
+            </select>
+            <div class="status" id="engineStatus">Moteur : en attente</div>
+            <div class="status" id="storeStatus"></div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYSE -->
+  <section class="view" id="v-analyse" hidden>
+    <div class="ana">
+      <div class="boardcol">
+        <div class="pstrip" id="pTop"></div>
+        <div class="bwrap">
+          <div class="evalbar" id="evalbar"><i style="height:50%"></i><b></b></div>
+          <div class="board" id="board" aria-label="Échiquier"></div>
+        </div>
+        <div class="pstrip" id="pBot"></div>
+        <div class="navbar">
+          <button class="btn" id="nFirst" aria-label="Début de la partie">⏮</button>
+          <button class="btn" id="nPrev" aria-label="Coup précédent">◀</button>
+          <button class="btn" id="nNext" aria-label="Coup suivant">▶</button>
+          <button class="btn" id="nLast" aria-label="Fin de la partie">⏭</button>
+        </div>
+        <div class="tools">
+          <button class="btn" id="nFlip" aria-label="Retourner l’échiquier" title="Retourner">⇅ retourner</button>
+          <button class="btn" id="nTheme" title="Couleur de l’échiquier">club</button>
+          <button class="btn" id="nSound" aria-pressed="true" title="Sons des coups">son</button>
+          <button class="btn" id="nHint" aria-pressed="true" title="Montrer le meilleur coup de la position">conseil</button>
+        </div>
+        <div class="boardhint">touche une pièce pour jouer ton idée · glisse sur l’échiquier ou ← → pour naviguer</div>
+      </div>
+      <aside class="rpanel" aria-label="Revue de la partie">
+        <div class="rp-head">
+          <div class="rp-title"><b>Revue de partie</b><span class="status" id="anaStatus"></span></div>
+          <button class="btn small ghost" id="toSum">Bilan</button>
+        </div>
+        <div class="prog" id="anaProg" hidden><i></i></div>
+        <div id="varbar"></div>
+        <div class="rp-graph">
+          <svg class="graph" id="graph" viewBox="0 0 400 96" preserveAspectRatio="none" aria-label="Évaluation au fil des coups"></svg>
+          <div class="gtip" id="gtip" hidden></div>
+        </div>
+        <div class="rp-body" id="rpSum"></div>
+        <div class="rp-body" id="rpMove" hidden>
+          <div id="coachCard"></div>
+          <div class="moves" id="moves"></div>
+        </div>
+        <div class="rp-foot" id="rpFoot"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ENTRAINEMENT -->
+  <section class="view" id="v-entrainement" hidden>
+    <div class="drill">
+      <div class="boardcol">
+        <div id="dTop"></div>
+        <div class="board" id="dboard" aria-label="Échiquier d’entraînement"></div>
+        <div class="dnav" id="dNav"></div>
+      </div>
+      <div class="view" style="gap:16px;min-width:0">
+        <div class="rpanel" id="drillCard"></div>
+        <div class="card" style="display:grid;gap:10px">
+          <span class="secttl">révision espacée</span>
+          <div class="boxes" id="boxes"></div>
+          <div class="note">Chaque position vient d’une de tes vraies parties. Trouvée du premier coup, elle revient plus tard (1, 3, 7, 16 puis 35 jours). Ratée, elle revient demain. Tu passes à la suivante quand tu le décides.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<nav class="tabbar" aria-label="Navigation">
+  <button data-tab="parties" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h10" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg><span>Parties</span></button>
+  <button data-tab="analyse" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z M4 12h16 M12 4v16" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M4 4h8v8H4z M12 12h8v8h-8z" fill="currentColor" opacity=".35"/></svg><span>Analyse</span></button>
+  <button data-tab="entrainement" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg><span>Entraînement</span><i class="pill" id="duePill2" hidden>0</i></button>
+</nav>
+
+<script src="chess.js"></script>
+<script src="core.js"></script>
+<script>
+(function(){
+'use strict';
+var C = window.Core;
+var $ = function(s, r){ return (r||document).querySelector(s); };
+var $$ = function(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+var FR = C.sanFr;
+var DAY = 86400000;
+var INTERVALS = [0, 1, 3, 7, 16, 35];
+
+var DEMO_PGN = '[Event "Partie de l\'Opéra (exemple)"]\n[Site "Paris"]\n[Date "1858.11.02"]\n[White "Paul Morphy"]\n[Black "Duc de Brunswick et comte Isouard"]\n[Result "1-0"]\n[ECO "C41"]\n[Opening "Défense Philidor"]\n\n1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7 8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0';
+
+// ---------------- état ----------------
+var S = {
+  user: 'CalcinepasCalcinable',
+  mode: 'rapide',
+  games: {},      // id -> {pgn, me, added, demo?}
+  analyses: {},   // id -> {mode, at, evals}
+  drills: {},     // id -> {box, due, seen, ok, ko}
+  parsed: {},     // id -> partie lue
+  reviews: {},    // id -> revue calculée
+  tab: 'parties', filter: 'all',
+  cur: null, ply: 0, flip: false, showBest: true, whatIf: null, sel: null,
+  drillCur: null, drillSel: null, drillState: null
+};
+
+// ---------------- stockage ----------------
+var Store = {
+  kind: 'local', base: null,
+  lsGet: function(k, d){ try{ var v = localStorage.getItem('cc:'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  lsSet: function(k, v){
+    if (k === 'games' || k === 'analyses') { var o = {}; Object.keys(v).forEach(function(id){ if (!(S.games[id] && S.games[id].demo)) o[id] = v[id]; }); v = o; }
+    try{ localStorage.setItem('cc:'+k, JSON.stringify(v)); }catch(e){}
+  },
+  loadLocal: function(){
+    S.user = Store.lsGet('user', S.user); S.mode = Store.lsGet('mode', S.mode); S.lastSync = Store.lsGet('lastSync', 0);
+    S.games = Store.lsGet('games', {}); S.analyses = Store.lsGet('analyses', {}); S.drills = Store.lsGet('drills', {});
+  },
+  saveLocalAll: function(){ Store.lsSet('games', S.games); Store.lsSet('analyses', S.analyses); Store.lsSet('drills', S.drills); },
+  initDb: function(){
+    if (!window.claude || !window.claude.use) return Promise.resolve(false);
+    return Promise.all([window.claude.use('db'), window.claude.use('user')]).then(function(r){
+      var db = r[0], user = r[1];
+      if (!db || !user) return false;
+      return user.id().then(function(uid){
+        if (!uid) return false;
+        Store.base = db.doc('data/users/' + uid + '/profile');
+        return Promise.all(['games','analyses','drills'].map(function(c){
+          return Store.base.collection(c).limit(1000).get().then(function(q){ var o = {}; q.docs.forEach(function(d){ o[d.id] = d.data(); }); return o; });
+        })).then(function(all){
+          return Store.base.get().then(function(p){ return [all, p]; });
+        }).then(function(x){
+          var all = x[0], prof = x[1];
+          Store.kind = 'db';
+          var pending = [];
+          // fusion : ce qui n'existe qu'ici part dans le stockage partagé
+          [['games',0],['analyses',1],['drills',2]].forEach(function(pair){
+            var name = pair[0], remote = all[pair[1]], local = S[name];
+            Object.keys(local).forEach(function(id){ if (S.games[id] && S.games[id].demo) return; if (!remote[id]) { remote[id] = local[id]; pending.push([name, id, local[id]]); } });
+            S[name] = remote;
+          });
+          if (prof.exists) { var pd = prof.data(); if (pd.user) S.user = pd.user; if (pd.mode) S.mode = pd.mode; if (pd.lastSync) S.lastSync = pd.lastSync; }
+          Store.lsSet('user', S.user); Store.lsSet('mode', S.mode);
+          return pending.reduce(function(p, it){ return p.then(function(){ return Store.base.collection(it[0]).doc(it[1]).set(JSON.parse(JSON.stringify(it[2]))).catch(function(){}); }); }, Promise.resolve()).then(function(){ return true; });
+        });
+      });
+    }).catch(function(){ return false; });
+  },
+  put: function(coll, id, data){
+    S[coll][id] = data;
+    Store.lsSet(coll, S[coll]);
+    if (Store.kind === 'db' && Store.base && !(S.games[id] && S.games[id].demo)) {
+      return Store.base.collection(coll).doc(id).set(JSON.parse(JSON.stringify(data))).catch(function(e){ setStoreStatus('Sauvegarde en ligne impossible (' + (e && e.code || 'erreur') + '), gardée sur cet appareil.'); });
+    }
+    return Promise.resolve();
+  },
+  del: function(coll, id){
+    delete S[coll][id]; Store.lsSet(coll, S[coll]);
+    if (Store.kind === 'db' && Store.base) return Store.base.collection(coll).doc(id).delete().catch(function(){});
+    return Promise.resolve();
+  },
+  putProfile: function(){
+    Store.lsSet('user', S.user); Store.lsSet('mode', S.mode); Store.lsSet('lastSync', S.lastSync || 0);
+    if (Store.kind === 'db' && Store.base) return Store.base.set({ user: S.user, mode: S.mode, lastSync: S.lastSync || 0 }).catch(function(){});
+    return Promise.resolve();
+  }
+};
+function setStoreStatus(t){ $('#storeStatus').textContent = t; }
+
+// ---------------- parties ----------------
+function getGame(id){
+  if (S.parsed[id]) return S.parsed[id];
+  var rec = S.games[id]; if (!rec) return null;
+  var g = C.parseGame(rec.pgn); if (!g) return null;
+  S.parsed[id] = g; return g;
+}
+function meOf(id){
+  var rec = S.games[id], g = getGame(id);
+  if (!g) return 'w';
+  return rec.me || C.myColor(g, S.user) || 'w';
+}
+function getReview(id){
+  var a = S.analyses[id]; var g = getGame(id);
+  if (!a || !g || !a.evals || a.evals.length !== g.fens.length) return null;
+  if (S.reviews[id] && S.reviews[id]._at === a.at) return S.reviews[id];
+  var rev = C.review(g, a.evals, meOf(id)); rev._at = a.at; S.reviews[id] = rev; return rev;
+}
+function sortedIds(){
+  return Object.keys(S.games).sort(function(a, b){
+    var ga = getGame(a), gb = getGame(b);
+    return ((gb && gb.ts) || S.games[b].added || 0) - ((ga && ga.ts) || S.games[a].added || 0);
+  });
+}
+function realIds(){ return sortedIds().filter(function(id){ return !S.games[id].demo; }); }
+
+function importPgns(texts, source){
+  var added = 0, skipped = 0, dup = 0;
+  var pending = [];
+  texts.forEach(function(t){
+    var g = C.parseGame(t);
+    if (!g || g.uci.length < 2) { skipped++; return; }
+    if (S.games[g.id]) { dup++; return; }
+    S.parsed[g.id] = g;
+    var rec = { pgn: t, added: Date.now(), src: source };
+    if (!C.myColor(g, S.user)) rec.me = 'w';
+    pending.push([g.id, rec]); added++;
+  });
+  // on écrit une partie à la fois
+  return pending.reduce(function(p, it){ return p.then(function(){ return Store.put('games', it[0], it[1]); }); }, Promise.resolve()).then(function(){
+    if (added) { Object.keys(S.games).forEach(function(id){ if (S.games[id].demo) { Store.del('games', id); delete S.analyses[id]; } }); }
+    return { added: added, skipped: skipped, dup: dup };
+  });
+}
+
+// ---------------- moteur ----------------
+var Engine = {
+  w: null, ready: null, queue: [], busy: null, kind: '',
+  start: function(){
+    if (Engine.ready) return Engine.ready;
+    function boot(file, ms){
+      return new Promise(function(res, rej){
+        var w; try { w = new Worker(file); } catch(e){ rej(e); return; }
+        var t = setTimeout(function(){ try{w.terminate();}catch(e){} rej(new Error('délai')); }, ms);
+        w.onerror = function(e){ clearTimeout(t); try{w.terminate();}catch(x){} rej(e); };
+        w.onmessage = function(e){ if (String(e.data).indexOf('uciok') === 0) { clearTimeout(t); res(w); } };
+        w.postMessage('uci');
+      });
+    }
+    var wasmOk = typeof WebAssembly === 'object';
+    setEngineStatus('Moteur : démarrage…');
+    Engine.ready = (wasmOk ? boot('stockfish.wasm.js', 9000).then(function(w){ Engine.kind = 'Stockfish 10 (WebAssembly)'; return w; }) : Promise.reject())
+      .catch(function(){ return boot('stockfish.js', 20000).then(function(w){ Engine.kind = 'Stockfish 10 (JavaScript)'; return w; }); })
+      .then(function(w){
+        Engine.w = w;
+        w.onmessage = function(e){ Engine.onLine(String(e.data)); };
+        w.postMessage('setoption name Hash value 16');
+        w.postMessage('setoption name MultiPV value 2');
+        w.postMessage('isready');
+        setEngineStatus('Moteur : ' + Engine.kind + ' prêt');
+        return w;
+      }).catch(function(e){ setEngineStatus('Moteur indisponible sur cet appareil.'); Engine.ready = null; throw e; });
+    return Engine.ready;
+  },
+  onLine: function(l){
+    var job = Engine.busy; if (!job) return;
+    if (l.indexOf('info') === 0 && l.indexOf(' pv ') > 0) {
+      var mp = l.match(/ multipv (\d+)/); var k = mp ? +mp[1] : 1;
+      var cp = l.match(/ score cp (-?\d+)/), mt = l.match(/ score mate (-?\d+)/);
+      if (/ (lowerbound|upperbound)/.test(l)) return;
+      job.lines[k] = { cp: cp ? +cp[1] : null, mate: mt ? +mt[1] : null, pv: l.split(' pv ')[1].trim().split(' ').slice(0, 10) };
+    } else if (l.indexOf('bestmove') === 0) {
+      Engine.busy = null;
+      job.resolve({ best: l.split(' ')[1], lines: job.lines });
+      Engine.pump();
+    }
+  },
+  pump: function(){
+    if (Engine.busy || !Engine.queue.length || !Engine.w) return;
+    var job = Engine.queue.shift(); Engine.busy = job;
+    Engine.w.postMessage('position fen ' + job.fen);
+    Engine.w.postMessage('go depth ' + job.depth + ' movetime ' + job.movetime);
+  },
+  raw: function(fen, depth, movetime){
+    return Engine.start().then(function(){
+      return new Promise(function(res){ Engine.queue.push({ fen: fen, depth: depth, movetime: movetime, lines: {}, resolve: res }); Engine.pump(); });
+    });
+  },
+  evalPos: function(fen, mode){
+    var c = new Chess(fen);
+    var stm = c.turn() === 'w' ? 1 : -1;
+    var legal = c.moves().length;
+    if (c.in_checkmate()) return Promise.resolve({ cp: -stm * 10000, mate: 0, terminal: true, legal: 0 });
+    if (legal === 0 || c.in_draw()) return Promise.resolve({ cp: 0, mate: null, terminal: true, legal: legal });
+    var depth = mode === 'profonde' ? 16 : 12, mt = mode === 'profonde' ? 3500 : 1300;
+    if (mode === 'eclair') { depth = 10; mt = 600; }
+    return Engine.raw(fen, depth, mt).then(function(r){
+      var a = r.lines[1] || { cp: 0, mate: null, pv: [r.best] }, b = r.lines[2];
+      var ev = { cp: a.cp != null ? stm * a.cp : 0, mate: a.mate != null ? stm * a.mate : null, best: r.best, pv: a.pv, legal: legal };
+      if (b && legal > 1) ev.second = { cp: b.cp != null ? stm * b.cp : 0, mate: b.mate != null ? stm * b.mate : null, move: b.pv[0] };
+      return ev;
+    });
+  },
+  stop: function(){ Engine.queue.length = 0; if (Engine.w && Engine.busy) Engine.w.postMessage('stop'); }
+};
+function setEngineStatus(t){ var el = $('#engineStatus'); if (el) el.textContent = t; }
+
+var Run = { token: 0, active: null };
+function analyzeGame(id, onProg){
+  var g = getGame(id); if (!g) return Promise.reject(new Error('partie illisible'));
+  var token = Run.token; var evals = []; var mode = S.mode;
+  Run.active = id;
+  var i = 0;
+  function step(){
+    if (token !== Run.token) return Promise.reject(new Error('stop'));
+    if (i >= g.fens.length) return Promise.resolve();
+    return Engine.evalPos(g.fens[i], mode).then(function(ev){ evals.push(ev); i++; onProg && onProg(i / g.fens.length); return step(); });
+  }
+  return step().then(function(){
+    if (Run.token === token) Run.active = null;
+    var rec = { mode: mode, at: Date.now(), evals: evals.map(slimEval) };
+    return Store.put('analyses', id, rec).then(function(){ delete S.reviews[id]; buildDrills(id); return rec; });
+  }, function(e){ if (Run.token === token) Run.active = null; throw e; });
+}
+function slimEval(e){
+  var o = { cp: e.cp, legal: e.legal };
+  if (e.mate != null) o.mate = e.mate;
+  if (e.terminal) o.terminal = true;
+  if (e.best) o.best = e.best;
+  if (e.pv) o.pv = e.pv.slice(0, 8);
+  if (e.second) o.second = e.second;
+  return o;
+}
+
+// ---------------- exercices (révision espacée) ----------------
+function buildDrills(id){
+  var rev = getReview(id), g = getGame(id), me = meOf(id), a = S.analyses[id];
+  if (!rev || !g || S.games[id].demo) return;
+  var adds = [];
+  rev.forEach(function(r){
+    if (!r || r.mover !== me) return;
+    if (!(r.cls === 'erreur' || r.cls === 'gaffe' || r.cls === 'manquee')) return;
+    var ev = a.evals[r.ply]; if (!ev || !ev.best) return;
+    var did = id + '_' + r.ply;
+    if (S.drills[did]) return;
+    adds.push([did, { box: 0, due: 0, seen: 0, ok: 0, ko: 0, created: Date.now() }]);
+  });
+  adds.reduce(function(p, it){ return p.then(function(){ return Store.put('drills', it[0], it[1]); }); }, Promise.resolve()).then(updateDue);
+}
+function drillData(did){
+  var k = did.lastIndexOf('_'); var id = did.slice(0, k), ply = +did.slice(k + 1);
+  var g = getGame(id), a = S.analyses[id], rev = getReview(id);
+  if (!g || !a || !rev || !rev[ply]) return null;
+  return { did: did, id: id, ply: ply, g: g, ev: a.evals[ply], r: rev[ply], fen: g.fens[ply] };
+}
+function dueList(){
+  var now = Date.now();
+  return Object.keys(S.drills).filter(function(d){ var s = S.drills[d]; return s.due <= now && drillData(d); })
+    .sort(function(a, b){ return (S.drills[a].seen ? 0 : 1) - (S.drills[b].seen ? 0 : 1) || S.drills[a].due - S.drills[b].due; });
+}
+function updateDue(){
+  var n = dueList().length;
+  ['#duePill', '#duePill2'].forEach(function(s){ var p = $(s); if (p) { p.textContent = n; p.hidden = !n; } });
+}
+
+// ---------------- rendu de l'échiquier ----------------
+var CLS_COLOR = function(c){ return 'var(--c-' + c + ')'; };
+function drawBoard(el, fen, opts){
+  opts = opts || {};
+  var b = C.fenBoard(fen);
+  var flip = !!opts.flip;
+  var html = '';
+  for (var r = 0; r < 8; r++) for (var f = 0; f < 8; f++) {
+    var file = flip ? 7 - f : f, rank = flip ? r + 1 : 8 - r;
+    var sq = 'abcdefgh'[file] + rank;
+    var light = (file + rank) % 2 === 1;
+    var cls = 'sq ' + (light ? 'l' : 'd');
+    if (opts.hl && opts.hl.indexOf(sq) >= 0) cls += ' hl';
+    if (opts.check === sq) cls += ' chk';
+    if (opts.sel === sq) cls += ' sel';
+    if (opts.hint === sq) cls += ' hint';
+    if (opts.targets && opts.targets[sq]) cls += ' tgt' + (b[sq] ? ' cap' : '');
+    var p = b[sq];
+    html += '<div class="' + cls + '" data-sq="' + sq + '"' + (opts.hlColor && opts.hl && opts.hl.indexOf(sq) >= 0 ? ' style="--hlc:' + opts.hlColor + '"' : '') + '>';
+    if (p) html += '<div class="pc ' + p.color + p.type.toUpperCase() + '"></div>';
+    if (f === 0) html += '<span class="coord r">' + rank + '</span>';
+    if (r === 7) html += '<span class="coord f">' + 'abcdefgh'[file] + '</span>';
+    if (opts.badge && opts.badge.sq === sq) html += '<span class="badge-sq">' + clsIcon(opts.badge.cls, 26).replace('width="26" height="26"', 'width="100%" height="100%"') + '</span>';
+    html += '</div>';
+  }
+  html += '<svg class="arrows" viewBox="0 0 8 8">' + (opts.arrows || []).map(function(a){ return arrowSvg(a, flip); }).join('') + '</svg>';
+  el.innerHTML = html;
+}
+function sqCenter(sq, flip){
+  var x = sq.charCodeAt(0) - 97, y = 8 - parseInt(sq[1], 10);
+  if (flip) { x = 7 - x; y = 7 - y; }
+  return [x + .5, y + .5];
+}
+function arrowSvg(a, flip){
+  var p0 = sqCenter(a.from, flip), p1 = sqCenter(a.to, flip);
+  var dx = p1[0] - p0[0], dy = p1[1] - p0[1], len = Math.sqrt(dx*dx + dy*dy);
+  var ux = dx / len, uy = dy / len;
+  var hx = p1[0] - ux * .38, hy = p1[1] - uy * .38;
+  var w = .17, hw = .34;
+  var nx = -uy, ny = ux;
+  var pts = [
+    [p0[0] + nx*w/2 + ux*.2, p0[1] + ny*w/2 + uy*.2],[hx + nx*w/2, hy + ny*w/2],[hx + nx*hw, hy + ny*hw],[p1[0] - ux*.08, p1[1] - uy*.08],[hx - nx*hw, hy - ny*hw],[hx - nx*w/2, hy - ny*w/2],[p0[0] - nx*w/2 + ux*.2, p0[1] - ny*w/2 + uy*.2]
+  ].map(function(p){ return p[0].toFixed(3) + ',' + p[1].toFixed(3); }).join(' ');
+  return '<polygon points="' + pts + '" fill="' + a.color + '" opacity="' + (a.op || .82) + '"/>';
+}
+function evalToWhitePct(ev){ return ev ? C.winPct(C.cpOf(ev)) : 50; }
+
+// ---------------- onglets ----------------
+function setTab(t){
+  S.tab = t;
+  $$('[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.tab === t)); });
+  document.body.setAttribute('data-view', t);
+  ['parties','analyse','entrainement'].forEach(function(v){ $('#v-' + v).hidden = v !== t; });
+  if (t === 'parties') renderGames();
+  if (t === 'analyse') { if (!S.cur) { var ids = sortedIds(); if (ids.length) openGame(ids[0], false); } else renderAnalysis(); }
+  if (t === 'entrainement') { renderDrill(); }
+  try { window.scrollTo(0, 0); } catch(e){}
+}
+$$('[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ setTab(b.dataset.tab); }); });
+
+// ---------------- vue : parties ----------------
+function fmtDate(ts){
+  if (!ts) return '';
+  var d = new Date(ts); var now = new Date();
+  var opts = { day: 'numeric', month: 'short' };
+  if (d.getFullYear() !== now.getFullYear()) opts.year = 'numeric';
+  return d.toLocaleDateString('fr-FR', opts) + ' · ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+var TC_FR = { bullet: 'Bullet', blitz: 'Blitz', rapid: 'Rapide', classique: 'Classique', quotidien: 'Quotidien' };
+function renderGames(){
+  var ids = sortedIds();
+  var list = ids.filter(function(id){
+    var g = getGame(id); if (!g) return false;
+    var me = meOf(id);
+    if (S.filter === 'V' || S.filter === 'D') return C.myResult(g, me) === S.filter;
+    if (S.filter === 'todo') return !S.analyses[id];
+    return true;
+  });
+  var el = $('#glist');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty" style="margin-top:12px">' + (ids.length ? 'Aucune partie dans ce filtre.' : 'Aucune partie pour l’instant. Synchronise ton compte ou colle un PGN à droite.') + '</div>';
+  } else {
+    el.innerHTML = list.slice(0, 200).map(function(id){
+      var g = getGame(id), me = meOf(id), rec = S.games[id];
+      var res = C.myResult(g, me);
+      var opp = me === 'w' ? g.black : g.white, oppElo = me === 'w' ? g.blackElo : g.whiteElo;
+      var rev = getReview(id); var acc = rev ? C.accuracy(rev, me) : null;
+      var running = Run.active === id;
+      var sub = [TC_FR[g.tclass] || '', g.opening, fmtDate(g.ts)].filter(Boolean).join(' · ');
+      return '<button class="grow" data-id="' + esc(id) + '">' +
+        '<span class="res ' + res + '">' + res + '</span>' +
+        '<span class="gmain"><span class="who"><span class="dot ' + me + '" title="' + (me === 'w' ? 'Tu jouais les Blancs' : 'Tu jouais les Noirs') + '"></span><span class="n">' + esc(opp) + (oppElo ? ' <span class="muted" style="font-weight:500">(' + oppElo + ')</span>' : '') + '</span>' + (rec.demo ? ' <span class="tag-ex">Exemple</span>' : '') + '</span>' +
+        '<span class="sub">' + esc(sub) + '</span></span>' +
+        '<span class="gside">' + (acc != null ? '<span class="acc">' + acc.toFixed(1) + '</span><br>précision' : running ? 'analyse…' : 'à analyser') + '</span></button>';
+    }).join('');
+  }
+  $$('.grow', el).forEach(function(b){ b.addEventListener('click', function(){ openGame(b.dataset.id, true); }); });
+  $('#whoami').textContent = S.user;
+  updateBgStatus(); renderHero();
+}
+$$('#gfilters .chip').forEach(function(c){ c.addEventListener('click', function(){
+  S.filter = c.dataset.f; $$('#gfilters .chip').forEach(function(x){ x.setAttribute('aria-pressed', String(x === c)); }); renderGames();
+}); });
+
+// ---------------- analyse automatique en arrière-plan ----------------
+var BG = { paused: false, running: false, id: null, frac: 0 };
+try { BG.paused = localStorage.getItem('cc:bgPaused') === '1'; } catch(e){}
+function bgTodo(){ return realIds().filter(function(id){ return !S.analyses[id]; }); }
+function updateBgStatus(){
+  var all = realIds().length, todo = bgTodo().length, done = all - todo;
+  var st = $('#batchStatus'), bar = $('#batchProg i'), btn = $('#batchBtn');
+  if (!st) return;
+  btn.textContent = BG.paused ? 'Reprendre' : 'Mettre en pause';
+  btn.hidden = !todo;
+  $('#batchProg').hidden = !all;
+  bar.style.width = (all ? (done + (BG.running ? BG.frac : 0)) / all * 100 : 0).toFixed(1) + '%';
+  if (!all) st.textContent = 'Tes parties analysées apparaîtront ici.';
+  else if (!todo) st.textContent = 'Analyse automatique : tes ' + all + ' parties sont analysées.';
+  else if (BG.paused) st.textContent = 'Analyse en pause · ' + done + ' / ' + all + ' parties.';
+  else st.textContent = 'Analyse automatique · ' + done + ' / ' + all + ' parties' + (BG.running ? ' (en cours…)' : '');
+}
+function bgPump(){
+  if (BG.paused || BG.running || Run.active) { updateBgStatus(); return; }
+  var todo = bgTodo(); updateBgStatus();
+  if (!todo.length) return;
+  var id = todo[0];
+  BG.running = true; BG.id = id; BG.frac = 0;
+  Run.token++;
+  var last = 0;
+  analyzeGame(id, function(f){ BG.frac = f; if (Date.now() - last > 700) { last = Date.now(); updateBgStatus(); } })
+    .then(function(){
+      BG.running = false; BG.id = null;
+      if (S.tab === 'parties') renderGames(); else if (S.tab === 'analyse' && S.cur === id) renderAnalysis();
+      updateDue(); setTimeout(bgPump, 300);
+    }, function(){ BG.running = false; BG.id = null; setTimeout(bgPump, 1500); });
+}
+$('#batchBtn').addEventListener('click', function(){
+  BG.paused = !BG.paused;
+  try { localStorage.setItem('cc:bgPaused', BG.paused ? '1' : '0'); } catch(e){}
+  if (BG.paused && BG.running) { Run.token++; Engine.stop(); }
+  updateBgStatus(); if (!BG.paused) bgPump();
+});
+
+// ---------------- accueil ----------------
+function renderHero(){
+  var h = new Date().getHours();
+  var hello = h < 5 ? 'Encore debout' : h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
+  $('#heroTitle').innerHTML = hello + ', <em>Badis</em>.';
+  var ids = realIds(), due = Object.keys(S.drills).filter(function(d){ return S.drills[d].due <= Date.now() && drillData(d); }).length;
+  var analyzed = ids.filter(function(id){ return S.analyses[id]; });
+  var accs = analyzed.slice(0, 10).map(function(id){ var r = getReview(id); return r ? C.accuracy(r, meOf(id)) : null; }).filter(function(x){ return x != null; });
+  var acc = accs.length ? accs.reduce(function(a, b){ return a + b; }, 0) / accs.length : null;
+  var lede;
+  if (!ids.length && STANDALONE) lede = 'Touche « Synchroniser maintenant » : tes parties chess.com arrivent toutes seules.';
+  else if (!ids.length) lede = isPhone() ? 'Ajoute ta première partie ci-dessous : copie-la depuis l’app chess.com et colle-la ici.' : 'Ouvre cette page dans l’app Claude sur ton Mac : tes parties chess.com arrivent toutes seules.';
+  else if (bgTodo().length) lede = 'Le moteur passe tes parties en revue. Chaque erreur trouvée devient un exercice.';
+  else lede = 'Tout est à jour. Analyse ta dernière partie, puis travaille tes erreurs.';
+  $('#heroLede').textContent = lede;
+  var g = ids.length ? getGame(ids[0]) : null;
+  if (g) {
+    var me = meOf(ids[0]), res = C.myResult(g, me);
+    $('#qLastRes').textContent = res === 'V' ? 'Victoire' : res === 'D' ? 'Défaite' : 'Nulle';
+    $('#qLast').textContent = 'contre ' + (me === 'w' ? g.black : g.white) + (g.ts ? ', ' + fmtDate(g.ts) : '');
+  }
+  $('#qDue').textContent = due;
+  $('#qAcc').textContent = acc != null ? acc.toFixed(1).replace('.', ',') : '–';
+  $('#qAccSub').textContent = accs.length ? 'sur tes ' + accs.length + ' dernières parties analysées' : 'en attente d’analyse';
+}
+$('#heroTrain').addEventListener('click', function(){ DR.game = null; setTab('entrainement'); openDrill(0); });
+$('#heroLast').addEventListener('click', function(){ var ids = realIds(); if (ids.length) openGame(ids[0], true); });
+
+$('#pgnIn').addEventListener('paste', function(){ setTimeout(function(){ if (C.splitPgns($('#pgnIn').value).length) $('#pgnBtn').click(); }, 60); });
+$('#pgnIn').addEventListener('input', function(){ var v = $('#pgnIn').value; if (/\[Event /.test(v) && /(1-0|0-1|1\/2-1\/2|\*)\s*$/.test(v.trim())) $('#pgnBtn').click(); });
+$('#pgnBtn').addEventListener('click', function(){
+  var parts = C.splitPgns($('#pgnIn').value);
+  if (!parts.length) { $('#pgnStatus').textContent = 'Colle d’abord un PGN.'; return; }
+  importPgns(parts, 'pgn').then(function(r){
+    $('#pgnStatus').textContent = r.added ? (r.added + ' partie' + (r.added > 1 ? 's importées' : ' importée') + (r.dup ? ', ' + r.dup + ' déjà là' : '') + '.') : (r.dup ? 'Déjà importée.' : 'PGN illisible : vérifie qu’il est complet (Échecs 960 non pris en charge).');
+    if (r.added) { $('#pgnIn').value = ''; $('#pgnIn').blur(); renderGames(); bgPump(); if (r.added === 1 && isPhone()) { var ids = realIds(); if (ids.length) openGame(ids[0], true); } }
+  });
+});
+$('#userSave').addEventListener('click', function(){
+  var v = $('#userIn').value.trim(); if (!v) return;
+  S.user = v; Store.putProfile(); S.reviews = {}; renderGames();
+});
+$('#depthSel').addEventListener('change', function(e){ S.mode = e.target.value; Store.putProfile(); });
+
+// ---------------- synchronisation chess.com (app Claude sur Mac) ----------------
+var BROWSER = 'host:claude_browser';
+// hors de Claude (ton propre site) : la page contacte chess.com directement
+var STANDALONE = !(window.claude && window.claude.use);
+if (STANDALONE) document.documentElement.classList.add('standalone');
+function resultText(r){
+  if (!r) return '';
+  if (typeof r.payload === 'string') return r.payload;
+  var t = (r.content || []).filter(function(c){ return c.type === 'text'; }).map(function(c){ return c.text; }).join('\n');
+  if (t) return t;
+  return r.payload ? JSON.stringify(r.payload) : '';
+}
+function findTabId(r){
+  var p = r && r.payload;
+  if (p && typeof p === 'object') { if (p.tabId != null) return String(p.tabId); if (p.tab && p.tab.id != null) return String(p.tab.id); }
+  var m = resultText(r).match(/tab\s*_?id["'\s:=]*([A-Za-z0-9_-]+)/i);
+  return m ? m[1] : null;
+}
+function extractPgns(txt){
+  var out = [];
+  var a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+  if (a >= 0 && b > a) {
+    try {
+      var j = JSON.parse(txt.slice(a, b + 1));
+      if (j.games) { j.games.forEach(function(g){ if (g.pgn && (!g.rules || g.rules === 'chess')) out.push(g.pgn); }); return out; }
+    } catch(e){}
+  }
+  var re = /"pgn"\s*:\s*"((?:[^"\\]|\\.)*)"/g, m;
+  while ((m = re.exec(txt))) { try { out.push(JSON.parse('"' + m[1] + '"')); } catch(e){} }
+  return out;
+}
+function syncMsg(code){
+  return ({
+    server_not_connected: 'La synchronisation marche dans l’app Claude sur ton Mac (navigateur intégré). Ici, colle plutôt un PGN.',
+    not_in_manifest: 'Le navigateur intégré n’a pas été autorisé pour cette page.',
+    approval_required: 'Il faut autoriser l’accès au navigateur intégré : relance et accepte la demande.',
+    cancelled: 'Synchronisation annulée.',
+    not_granted: 'Cette vue ne permet pas d’utiliser le navigateur intégré.',
+    capability_disabled: 'Cette vue ne permet pas d’utiliser le navigateur intégré.'
+  })[code] || null;
+}
+var Sync = { busy: false, available: null, timer: null };
+function setChip(state, text){
+  var c = $('#syncChip'); c.className = 'syncchip' + (state ? ' ' + state : ''); $('span', c).textContent = text;
+}
+function agoText(ts){
+  if (!ts) return '';
+  var m = Math.round((Date.now() - ts) / 60000);
+  return m < 1 ? 'à l’instant' : m < 60 ? 'il y a ' + m + ' min' : m < 1440 ? 'il y a ' + Math.round(m / 60) + ' h' : 'le ' + new Date(ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+function idleChip(){
+  if (STANDALONE) { setChip(Sync.busy ? 'busy' : 'on', S.lastSync ? 'Synchronisé ' + agoText(S.lastSync) : 'Synchro chess.com'); return; }
+  if (Sync.available) setChip('on', S.lastSync ? 'Import auto · à jour ' + agoText(S.lastSync) : 'Import auto activé');
+  else setChip('', S.lastSync ? 'Dernier import ' + agoText(S.lastSync) + ' · auto sur ton Mac' : 'Import auto sur ton Mac');
+}
+function syncNow(auto){
+  if (Sync.busy) return Promise.resolve();
+  Sync.busy = true;
+  var st = $('#syncStatus'), btn = $('#syncBtn');
+  btn.disabled = true; st.className = 'status'; st.textContent = '';
+  setChip('busy', 'Import de tes parties…');
+  var user = S.user.toLowerCase(), mcp, total = 0;
+  function txtOf(url){
+    if (STANDALONE) return fetch(url, { cache: 'no-store' }).then(function(r){ if (!r.ok) throw { msg: r.status === 404 ? 'Pseudo introuvable sur chess.com : vérifie-le dans les réglages.' : 'chess.com ne répond pas (' + r.status + '). Réessaie dans un instant.' }; return r.text(); });
+    return mcp.callTool(BROWSER, 'navigate', { url: url }).then(function(){
+      return mcp.callTool(BROWSER, 'get_page_text', { max_chars: 3000000 });
+    }).then(resultText);
+  }
+  return (STANDALONE ? Promise.resolve(true) : window.claude && window.claude.use ? window.claude.use('mcp') : Promise.resolve(null)).then(function(m){
+    mcp = m;
+    if (!mcp) throw { code: 'server_not_connected' };
+    return txtOf('https://api.chess.com/pub/player/' + encodeURIComponent(user) + '/games/archives');
+  }).then(function(txt){
+    var a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+    var arch;
+    try { arch = JSON.parse(txt.slice(a, b + 1)).archives || []; } catch(e){ throw { msg: 'Réponse de chess.com illisible. Réessaie dans un instant.' }; }
+    if (!arch.length) throw { msg: 'Aucune partie trouvée pour « ' + S.user + ' ». Vérifie ton pseudo dans les réglages.' };
+    var months = arch.slice(S.lastSync ? -2 : -12).reverse();
+    return months.reduce(function(p, url, k){
+      return p.then(function(){
+        setChip('busy', 'Import · mois ' + (k + 1) + ' sur ' + months.length);
+        return txtOf(url).then(function(t){ return importPgns(extractPgns(t), 'chess.com'); })
+          .then(function(res){ total += res.added; if (res.added) { renderGamesIfVisible(); bgPump(); } });
+      });
+    }, Promise.resolve());
+  }).then(function(){
+    Sync.available = true;
+    S.lastSync = Date.now(); Store.putProfile();
+    if (!auto || total) st.textContent = total ? total + ' nouvelle' + (total > 1 ? 's parties importées' : ' partie importée') + '.' : 'Déjà à jour : aucune nouvelle partie.';
+    bgPump();
+  }).catch(function(e){
+    var raw = (e && (e.message || '')) + ' ' + JSON.stringify((e && e.result) || '');
+    if (e && e.code === 'server_not_connected') Sync.available = false;
+    if (auto && e && e.code === 'server_not_connected') return;
+    st.className = 'err';
+    if (/allow|autoris/i.test(raw) && /chess\.com/i.test(raw)) { st.textContent = 'Autorise api.chess.com dans le navigateur intégré de l’app Claude (la demande s’affiche), puis touche « Synchroniser maintenant ».'; return; }
+    st.textContent = (e && e.msg) || syncMsg(e && e.code) || ('Import impossible' + (e && e.code ? ' (' + e.code + ')' : '') + '. Tu peux coller un PGN à la place.');
+  }).then(function(){ Sync.busy = false; btn.disabled = false; idleChip(); renderGamesIfVisible(); });
+}
+$('#syncBtn').addEventListener('click', function(){ syncNow(false); });
+function startAutoSync(){
+  idleChip();
+  if (STANDALONE) {
+    Sync.available = true; idleChip();
+    var tk = function(){ if (!S.lastSync || Date.now() - S.lastSync > 10 * 60000) syncNow(true); else idleChip(); };
+    tk(); Sync.timer = setInterval(tk, 5 * 60000);
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden) tk(); });
+    return;
+  }
+  if (!window.claude || !window.claude.use) return;
+  window.claude.use('mcp').then(function(mcp){
+    if (!mcp) { Sync.available = false; idleChip(); return; }
+    return mcp.listTools().then(function(r){
+      Sync.available = (r.servers || []).some(function(x){ return x.server === BROWSER; });
+      idleChip();
+      if (!Sync.available) return;
+      var tick = function(){ if (!S.lastSync || Date.now() - S.lastSync > 30 * 60000) syncNow(true); else idleChip(); };
+      tick();
+      Sync.timer = setInterval(tick, 5 * 60000);
+    });
+  }).catch(function(){ Sync.available = false; idleChip(); });
+}
+
+// ---------------- vue : analyse ----------------
+function openGame(id, go){
+  if (S.cur !== id) { S.cur = id; S.ply = 0; S.vx = null; S.sel = null; S.flip = meOf(id) === 'b'; AI.reset(); }
+  if (go) setTab('analyse'); else renderAnalysis();
+  if (!S.analyses[id] && Run.active !== id) startAnalysis(id);
+  else if (!S.analyses[id]) $('#anaStatus').textContent = 'Analyse automatique en cours…';
+}
+function startAnalysis(id){
+  Run.token++; Engine.stop();
+  var prog = $('#anaProg'), bar = $('#anaProg i');
+  prog.hidden = false; bar.style.width = '0%';
+  $('#anaStatus').textContent = 'Analyse en cours…';
+  renderAnalysis();
+  analyzeGame(id, function(f){ if (S.cur === id) { bar.style.width = (f * 100).toFixed(1) + '%'; $('#anaStatus').textContent = 'Analyse ' + Math.round(f * 100) + ' %'; } })
+    .then(function(){ if (S.cur === id) { prog.hidden = true; $('#anaStatus').textContent = ''; renderAnalysis(); } renderGamesIfVisible(); setTimeout(bgPump, 500); })
+    .catch(function(e){ if (S.cur === id) { prog.hidden = true; $('#anaStatus').textContent = e && e.message === 'stop' ? 'Analyse interrompue.' : 'Analyse impossible.'; } setTimeout(bgPump, 1500); });
+}
+function renderGamesIfVisible(){ if (S.tab === 'parties') renderGames(); }
+
+// ---------- petits outils visuels ----------
+function clsIcon(cls, size){
+  size = size || 20;
+  var col = CLS_COLOR(cls), inner;
+  var txt = function(t, fs){ return '<text x="10" y="' + (fs > 9 ? 14 : 13.4) + '" text-anchor="middle" font-size="' + fs + '" font-weight="800" fill="#fff" font-family="Hanken Grotesk, system-ui, sans-serif" letter-spacing="-.5">' + t + '</text>'; };
+  switch (cls) {
+    case 'brillant': inner = txt('!!', 9.5); break;
+    case 'unique': inner = txt('!', 11); break;
+    case 'meilleur': inner = '<polygon points="10,4 11.8,8.2 16.2,8.4 12.8,11.2 14,15.6 10,13.1 6,15.6 7.2,11.2 3.8,8.4 8.2,8.2" fill="#fff"/>'; break;
+    case 'excellent': inner = '<path d="M5.3 9.2h2.1v5.6H5.3z M8.4 14.8h4.5c.6 0 1.1-.4 1.3-1l.9-3.2c.2-.8-.4-1.5-1.2-1.5h-2.5l.4-2c.1-.6-.3-1.1-.9-1.2-.3 0-.6.1-.8.4L8.4 9.2z" fill="#fff"/>'; break;
+    case 'bon': inner = '<path d="M6.4 10.4l2.4 2.4 4.8-5.4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'; break;
+    case 'theorie': inner = '<path d="M4.6 6.4c1.9-.6 3.8-.4 5.4.7v7.4c-1.6-1-3.5-1.2-5.4-.6zM15.4 6.4c-1.9-.6-3.8-.4-5.4.7v7.4c1.6-1 3.5-1.2 5.4-.6z" fill="#fff"/>'; break;
+    case 'force': inner = '<rect x="6.5" y="6.5" width="7" height="7" rx="1" stroke="#fff" stroke-width="1.8" fill="none"/>'; break;
+    case 'imprecision': inner = txt('?!', 9.5); break;
+    case 'erreur': inner = txt('?', 11); break;
+    case 'manquee': inner = '<path d="M6.8 6.8l6.4 6.4M13.2 6.8l-6.4 6.4" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'; break;
+    case 'gaffe': inner = txt('??', 9.5); break;
+    default: inner = '';
+  }
+  return '<span class="ico"><svg width="' + size + '" height="' + size + '" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="' + col + '"/>' + inner + '</svg></span>';
+}
+var NOTABLE = { brillant: 1, unique: 1, imprecision: 1, erreur: 1, manquee: 1, gaffe: 1 };
+function evChip(ev){
+  if (!ev) return '';
+  var w = C.cpOf(ev) >= 0;
+  return '<span class="evchip ' + (w ? 'w' : 'b') + '">' + esc(C.fmtEval(ev)) + '</span>';
+}
+function perfElo(acc){
+  if (acc == null) return null;
+  var T = [[0, 100], [40, 250], [50, 400], [60, 700], [70, 1000], [80, 1400], [85, 1650], [90, 1950], [95, 2350], [100, 2800]];
+  for (var i = 1; i < T.length; i++) if (acc <= T[i][0]) { var a = T[i - 1], b = T[i]; return Math.round((a[1] + (acc - a[0]) / (b[0] - a[0]) * (b[1] - a[1])) / 25) * 25; }
+  return 2800;
+}
+// « niveau joué dans cette partie », façon Game Rating de chess.com :
+// précision convertie en Elo, ramenée vers le classement réel du joueur (une seule partie est bruitée)
+function gameRating(acc, elo){
+  var m = perfElo(acc); if (m == null) return null;
+  var v = elo ? 0.55 * m + 0.45 * elo : m;
+  return Math.max(100, Math.round(v / 50) * 50);
+}
+function ring(acc, me){
+  var r = 40, c = 2 * Math.PI * r, v = acc == null ? 0 : acc / 100;
+  return '<div class="ring"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="8"/><circle cx="48" cy="48" r="' + r + '" fill="none" stroke="' + (me ? 'var(--accent)' : 'var(--accent-2)') + '" stroke-width="8" stroke-linecap="round" stroke-dasharray="' + (c * v).toFixed(1) + ' ' + c.toFixed(1) + '"/></svg><b>' + (acc != null ? acc.toFixed(1) : '–') + '</b></div>';
+}
+var INIT = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+function captured(fen){
+  var b = C.fenBoard(fen), cnt = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } };
+  Object.keys(b).forEach(function(s){ var p = b[s]; if (p.type !== 'k') cnt[p.color][p.type]++; });
+  var mat = { w: 0, b: 0 };
+  ['w', 'b'].forEach(function(c){ Object.keys(cnt[c]).forEach(function(t){ mat[c] += cnt[c][t] * C.VAL[t]; }); });
+  function lost(c){ var out = []; ['q', 'r', 'b', 'n', 'p'].forEach(function(t){ for (var k = 0; k < Math.max(0, INIT[t] - cnt[c][t]); k++) out.push(c + t.toUpperCase()); }); return out; }
+  return { byW: lost('b'), byB: lost('w'), diff: mat.w - mat.b };
+}
+function kingInCheck(fen){
+  var c = new Chess(fen); if (!c.in_check()) return null;
+  var b = C.fenBoard(fen), t = c.turn();
+  return Object.keys(b).filter(function(s){ return b[s].type === 'k' && b[s].color === t; })[0];
+}
+
+// ---------- sons ----------
+// sons de bois synthétisés : « tac » d'une pièce posée sur l'échiquier
+var Sound = {
+  on: (function(){ try { return localStorage.getItem('cc:sound') !== '0'; } catch(e){ return true; } })(), ctx: null, bufs: null,
+  // une frappe : bruit très court (attaque) + quelques résonances du bois amorties + un léger « toc » grave de la table
+  clack: function(ctx, o){
+    var sr = ctx.sampleRate, n = Math.floor(sr * (o.len || 0.16)), buf = ctx.createBuffer(1, n, sr), d = buf.getChannelData(0);
+    var seed = o.seed || 1, rnd = function(){ seed = (seed * 16807) % 2147483647; return seed / 2147483647 * 2 - 1; };
+    var prev = 0, hp = 0;
+    for (var i = 0; i < n; i++) {
+      var t = i / sr, v = 0;
+      var nz = rnd(); hp = 0.86 * (hp + nz - prev); prev = nz;
+      v += hp * Math.exp(-t / 0.0022) * (o.click || 0.55);
+      o.modes.forEach(function(m){ v += m[1] * Math.sin(2 * Math.PI * m[0] * (1 - 0.04 * Math.min(t / 0.02, 1)) * t) * Math.exp(-t / m[2]); });
+      v += (o.thump || 0.35) * Math.sin(2 * Math.PI * (o.low || 150) * t) * Math.exp(-t / 0.028) * Math.min(1, t / 0.0015);
+      d[i] = v * (o.gain || 0.5);
+    }
+    // fondu d'entrée très court pour éviter le clic numérique
+    for (var k = 0; k < 24 && k < n; k++) d[k] *= k / 24;
+    return buf;
+  },
+  init: function(){
+    if (Sound.bufs) return Sound.ctx;
+    var ctx = Sound.ctx || (Sound.ctx = new (window.AudioContext || window.webkitAudioContext)());
+    Sound.bufs = {
+      move: Sound.clack(ctx, { seed: 3, modes: [[1180, .55, .010], [2350, .28, .006], [3700, .12, .004]], low: 165, thump: .3, gain: .55 }),
+      capture: Sound.clack(ctx, { seed: 9, modes: [[900, .7, .016], [1650, .45, .010], [2900, .2, .006]], low: 125, thump: .5, click: .8, gain: .45, len: .2 }),
+      tick: Sound.clack(ctx, { seed: 5, modes: [[2600, .5, .008], [4100, .2, .005]], low: 300, thump: .08, click: .3, gain: .3, len: .1 })
+    };
+    return ctx;
+  },
+  hit: function(name, at, vol){
+    var ctx = Sound.ctx, src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = Sound.bufs[name]; src.playbackRate.value = 0.97 + Math.random() * 0.06;
+    g.gain.value = vol == null ? 1 : vol; src.connect(g); g.connect(ctx.destination); src.start(at);
+  },
+  play: function(kind){
+    if (!Sound.on) return;
+    try {
+      var ctx = Sound.init(); if (ctx.state === 'suspended') ctx.resume();
+      var t = ctx.currentTime + 0.005;
+      if (kind === 'capture') Sound.hit('capture', t);
+      else if (kind === 'castle') { Sound.hit('move', t); Sound.hit('move', t + 0.09, 0.8); }
+      else if (kind === 'check') { Sound.hit('move', t); Sound.hit('tick', t + 0.07, 0.9); }
+      else if (kind === 'end') { Sound.hit('capture', t); var o = ctx.createOscillator(), og = ctx.createGain(); o.type = 'triangle'; o.frequency.value = 523; og.gain.setValueAtTime(0.0001, t + 0.12); og.gain.exponentialRampToValueAtTime(0.08, t + 0.15); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.7); o.connect(og); og.connect(ctx.destination); o.start(t + 0.12); o.stop(t + 0.72); }
+      else Sound.hit('move', t);
+    } catch(e){}
+  },
+  san: function(san, captured){ return /#/.test(san) ? 'end' : /\+/.test(san) ? 'check' : /^O-O/.test(san) ? 'castle' : (captured || /x/.test(san)) ? 'capture' : 'move'; }
+};
+var BTHEMES = ['club', 'marine', 'camo', 'atelier', 'bois'];
+var BT_FR = { club: 'club', marine: 'marine', camo: 'camo', atelier: 'atelier', bois: 'bois' };
+var bTheme = (function(){ try { return localStorage.getItem('cc:board') || 'club'; } catch(e){ return 'club'; } })();
+function applyBoardTheme(){ if (BTHEMES.indexOf(bTheme) < 0) bTheme = 'club'; $$('.board').forEach(function(b){ b.setAttribute('data-b', bTheme); }); $('#nTheme').textContent = BT_FR[bTheme]; }
+
+function animatePiece(boardEl, from, to, flip){
+  try {
+    var pc = $('.sq[data-sq="' + to + '"] .pc', boardEl); if (!pc) return;
+    var s = boardEl.clientWidth / 8;
+    var a = sqCenter(from, flip), b = sqCenter(to, flip);
+    pc.style.transition = 'none';
+    pc.style.transform = 'translate(' + ((a[0] - b[0]) * s) + 'px,' + ((a[1] - b[1]) * s) + 'px)';
+    pc.style.zIndex = 6;
+    void pc.offsetWidth;
+    pc.style.transition = 'transform .2s cubic-bezier(.25,.8,.35,1)';
+    pc.style.transform = '';
+  } catch(e){}
+}
+
+// ---------- joueurs ----------
+function playerStrip(g, color, ply, me, fen){
+  var name = color === 'w' ? g.white : g.black, elo = color === 'w' ? g.whiteElo : g.blackElo;
+  var cap = captured(fen), list = color === 'w' ? cap.byW : cap.byB, adv = color === 'w' ? cap.diff : -cap.diff;
+  var clock = null;
+  if (g.clocks.length) { var idx = -1; for (var k = ply - 1; k >= 0; k--) { if ((k % 2 === 0 ? 'w' : 'b') === color) { idx = k; break; } } clock = idx >= 0 ? g.clocks[idx] : g.base; }
+  var toMove = (ply % 2 === 0 ? 'w' : 'b') === color && ply < g.uci.length;
+  return '<div class="pl"><span class="av' + (color === me ? ' me' : '') + '">' + esc((name || '?').charAt(0).toUpperCase()) + '</span><div class="pl-txt"><span class="pl-nm">' + esc(name) + (elo ? ' <span class="muted">(' + elo + ')</span>' : '') + '</span>' +
+    '<span class="caps">' + list.map(function(p){ return '<span class="pc mini ' + p + '"></span>'; }).join('') + (adv > 0 ? '<b>+' + adv + '</b>' : '') + '</span></div></div>' +
+    (clock != null ? '<span class="clk' + (toMove ? ' on' : '') + '">' + fmtClock(clock) + '</span>' : '');
+}
+function fmtClock(s){ var m = Math.floor(s / 60), r = s - m * 60; return m + ':' + (r < 10 ? '0' : '') + (r % 1 && s < 20 ? r.toFixed(1) : Math.floor(r)); }
+function moveNo(plyIdx){ return Math.floor(plyIdx / 2) + 1 + (plyIdx % 2 ? '… ' : '. '); }
+
+// ---------- rendu principal ----------
+/* S.vx : variante libre jouée sur l'échiquier
+   { base: demi-coup de la partie d'où part la variante, moves: [{uci, san, from, to, fen, ev, cls, loss}], cur: nb de coups affichés } */
+var HEAD = { brillant: 'est brillant !', unique: 'est un très bon coup', meilleur: 'est le meilleur coup', excellent: 'est excellent', bon: 'est un bon coup', theorie: 'est un coup théorique', force: 'était forcé', imprecision: 'est une imprécision', erreur: 'est une erreur', manquee: 'est une occasion manquée', gaffe: 'est une gaffe' };
+function inVar(){ return !!S.vx; }
+function varFen(){ var v = S.vx; return v.cur ? v.moves[v.cur - 1].fen : getGame(S.cur).fens[v.base]; }
+function curFen(){ var g = getGame(S.cur); return inVar() ? varFen() : g.fens[S.ply]; }
+// évaluation de la position affichée (avant le prochain coup)
+function curEval(){
+  var a = S.analyses[S.cur];
+  if (!inVar()) return a ? a.evals[S.ply] : null;
+  var v = S.vx; return v.cur ? v.moves[v.cur - 1].ev : (a ? a.evals[v.base] : null);
+}
+function evalBefore(v, k){ var a = S.analyses[S.cur]; return k === 0 ? (a ? a.evals[v.base] : null) : v.moves[k - 1].ev; }
+function classify(evB, evA, uci, mover){
+  if (!evB || !evA) return null;
+  var sgn = mover === 'w' ? 1 : -1;
+  var wb = C.winPct(sgn * C.cpOf(evB)), wa = C.winPct(sgn * C.cpOf(evA));
+  var best = evB.best && evB.best.slice(0, 4) === uci.slice(0, 4);
+  var loss = best ? 0 : Math.max(0, wb - wa);
+  return { loss: loss, cls: best ? 'meilleur' : loss < 2 ? 'excellent' : loss < 5 ? 'bon' : loss < 10 ? 'imprecision' : loss < 20 ? 'erreur' : 'gaffe' };
+}
+var EvalQ = { busy: false };
+// évalue au besoin les coups de la variante qui n'ont pas encore d'évaluation
+function fillVarEvals(){
+  var v = S.vx; if (!v || EvalQ.busy) return;
+  var k = -1;
+  for (var i = 0; i < v.moves.length; i++) if (!v.moves[i].ev) { k = i; break; }
+  if (k < 0) return;
+  EvalQ.busy = true;
+  var m = v.moves[k];
+  Engine.evalPos(m.fen, 'eclair').then(function(ev){
+    EvalQ.busy = false;
+    m.ev = ev;
+    var b = evalBefore(v, k);
+    if (b && !m.cls) { var c = classify(b, ev, m.uci, m.mover); if (c) { m.cls = c.cls; m.loss = c.loss; } }
+    if (S.vx === v) renderAnalysis();
+    fillVarEvals();
+  }, function(){ EvalQ.busy = false; });
+}
+function pushVar(fen, uci, cls){
+  var c = new Chess(fen);
+  var mv = c.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || 'q' });
+  if (!mv) return null;
+  return { uci: mv.from + mv.to + (mv.promotion || ''), san: mv.san, from: mv.from, to: mv.to, fen: c.fen(), ev: null, cls: cls || null, loss: null, mover: mv.color, capture: !!mv.captured };
+}
+function playSound(m){ Sound.play(Sound.san(m.san, m.capture || /x/.test(m.san))); }
+// montre la suite du moteur depuis une position (demi-coup de la partie)
+function showBestLine(basePly){
+  var g = getGame(S.cur), a = S.analyses[S.cur]; if (!a) return;
+  var ev = a.evals[basePly]; if (!ev || !ev.best) return;
+  var pv = ev.pv && ev.pv.length ? ev.pv : [ev.best], fen = g.fens[basePly], moves = [];
+  pv.slice(0, 8).forEach(function(u, i){ var m = pushVar(fen, u, i === 0 ? 'meilleur' : null); if (m) { moves.push(m); fen = m.fen; } });
+  if (!moves.length) return;
+  S.vx = { base: basePly, moves: moves, cur: 1, fromBest: true };
+  S.anim = { from: moves[0].from, to: moves[0].to }; playSound(moves[0]);
+  renderAnalysis(); fillVarEvals();
+}
+function exitVar(){ var v = S.vx; S.vx = null; S.sel = null; if (v) S.ply = v.base + (v.fromBest ? 1 : 0); renderAnalysis(); }
+
+function renderAnalysis(){
+  var id = S.cur, g = id && getGame(id);
+  if (!g) { $('#rpSum').hidden = false; $('#rpMove').hidden = true; $('#rpSum').innerHTML = '<div class="empty">Choisis une partie dans l’onglet Parties.</div>'; $('#rpFoot').innerHTML = ''; return; }
+  var me = meOf(id), rev = getReview(id), a = S.analyses[id];
+  var n = g.uci.length; S.ply = Math.max(0, Math.min(n, S.ply));
+  var v = S.vx, ply = S.ply;
+  if (a && $('#anaProg').hidden) $('#anaStatus').textContent = '';
+  var showSum = !v && ply === 0;
+  $('#rpSum').hidden = !showSum; $('#rpMove').hidden = showSum;
+  $('#toSum').hidden = showSum;
+
+  var fen = curFen(), arrows = [], hl = [], badge = null, hlColor = null;
+  var last = null; // dernier coup affiché, avec sa revue
+  if (v) {
+    if (v.cur) { var m = v.moves[v.cur - 1]; hl = [m.from, m.to]; last = { san: m.san, cls: m.cls, mover: m.mover }; if (m.cls) { badge = { sq: m.to, cls: m.cls }; hlColor = CLS_COLOR(m.cls); } }
+    else if (v.base > 0) { var bm = g.moves[v.base - 1]; hl = [bm.from, bm.to]; }
+    var b4 = evalBefore(v, v.cur ? v.cur - 1 : 0);
+    if (v.cur && b4 && b4.best && v.moves[v.cur - 1].cls && v.moves[v.cur - 1].cls !== 'meilleur') { var bb = b4.best; arrows.push({ from: bb.slice(0, 2), to: bb.slice(2, 4), color: 'var(--c-meilleur)', op: .85 }); }
+  } else if (ply > 0) {
+    var mv0 = g.moves[ply - 1]; hl = [mv0.from, mv0.to];
+    var r = rev ? rev[ply - 1] : null;
+    if (r) { badge = { sq: mv0.to, cls: r.cls }; hlColor = CLS_COLOR(r.cls); if (r.best && r.best.slice(0, 4) !== g.uci[ply - 1].slice(0, 4) && r.cls !== 'theorie') arrows.push({ from: r.best.slice(0, 2), to: r.best.slice(2, 4), color: 'var(--c-meilleur)', op: .85 }); }
+  }
+  var nowEv = curEval();
+  if (Hint.on && nowEv && nowEv.best && !nowEv.terminal && nowEv.best !== '(none)') {
+    var nb = nowEv.best;
+    if (!arrows.some(function(x){ return x.from === nb.slice(0, 2) && x.to === nb.slice(2, 4); })) arrows.push({ from: nb.slice(0, 2), to: nb.slice(2, 4), color: 'var(--accent-2)', op: .75 });
+  }
+  var targets = null;
+  if (S.sel) { targets = {}; new Chess(fen).moves({ square: S.sel, verbose: true }).forEach(function(m){ targets[m.to] = 1; }); }
+  var boardEl = $('#board');
+  drawBoard(boardEl, fen, { flip: S.flip, hl: hl, hlColor: hlColor, arrows: arrows, badge: badge, sel: S.sel, targets: targets, check: kingInCheck(fen) });
+  boardEl.setAttribute('data-b', bTheme);
+  if (S.anim) { animatePiece(boardEl, S.anim.from, S.anim.to, S.flip); S.anim = null; }
+
+  var stripPly = v ? v.base : ply;
+  var topColor = S.flip ? 'w' : 'b', botColor = S.flip ? 'b' : 'w';
+  $('#pTop').innerHTML = playerStrip(g, topColor, stripPly, me, fen);
+  $('#pBot').innerHTML = playerStrip(g, botColor, stripPly, me, fen);
+
+  var evShown = curEval();
+  var eb = $('#evalbar'); eb.classList.toggle('flip', S.flip);
+  var wp = evalToWhitePct(evShown);
+  eb.classList.toggle('blk', wp < 50);
+  $('i', eb).style.height = wp.toFixed(1) + '%';
+  $('b', eb).textContent = evShown ? C.fmtEval(evShown).replace('−', '-') : '';
+
+  renderVarBar(g);
+  renderGraph(g, rev, a, me);
+  if (showSum) renderSummary(g, rev, a, me, id);
+  else { renderCoach(g, rev, a, me); renderMoves(g, rev); }
+  renderFoot(g, rev, me);
+}
+
+function renderVarBar(g){
+  var el = $('#varbar'), v = S.vx;
+  if (!v) { el.innerHTML = ''; return; }
+  var seq = v.moves.slice(0, v.cur).map(function(m, i){ var p = v.base + i; return (i === 0 || p % 2 === 0 ? moveNo(p).trim() + ' ' : '') + FR(m.san); }).join(' ');
+  el.innerHTML = '<div class="varbar"><span><span class="tag dark">variante</span> <b>' + esc(seq || ('depuis ' + (v.base ? moveNo(v.base - 1) + FR(g.sans[v.base - 1]) : 'le départ'))) + '</b></span><button id="vxExit">← Retour à la partie</button></div>';
+  $('#vxExit').addEventListener('click', exitVar);
+}
+
+function summaryText(g, rev, me){
+  var acc = C.accuracy(rev, me), res = C.myResult(g, me), A = acc != null ? acc.toFixed(1).replace('.', ',') : '?';
+  var out = [];
+  if (res === 'V') out.push(acc >= 80 ? 'Victoire propre, ' + A + ' de précision.' : 'Victoire, avec ' + A + ' de précision. Il y a des choses à revoir.');
+  else if (res === 'D') out.push(acc >= 80 ? 'Défaite serrée malgré ' + A + ' de précision.' : 'Défaite, ' + A + ' de précision. Regardons où ça a basculé.');
+  else out.push('Nulle, ' + A + ' de précision.');
+  var myElo = me === 'w' ? g.whiteElo : g.blackElo, gr = gameRating(acc, myElo);
+  if (gr != null) out.push('Tu as joué à un niveau d’environ ' + gr + (myElo ? (gr > myElo + 25 ? ', au-dessus de ton classement (' + myElo + ').' : gr < myElo - 25 ? ', en dessous de ton classement (' + myElo + ').' : ', proche de ton classement (' + myElo + ').') : '.'));
+  var worst = C.keyMoments(rev, me, 1)[0];
+  if (worst) out.push('Le tournant : ' + moveNo(worst.ply) + FR(worst.san) + '. Il fallait jouer ' + FR(worst.bestSan) + '.');
+  var top = rev.filter(function(x){ return x && x.mover === me && (x.cls === 'brillant' || x.cls === 'unique'); })[0];
+  if (top) out.push('Ton plus beau coup : ' + moveNo(top.ply) + FR(top.san) + '.');
+  return out;
+}
+function renderSummary(g, rev, a, me, id){
+  var el = $('#rpSum'), h = '';
+  var res = C.myResult(g, me);
+  var meta = [TC_FR[g.tclass], g.base != null ? (g.base / 60) + ' min' + (g.inc ? ' + ' + g.inc + ' s' : '') : '', fmtDate(g.ts)].filter(Boolean).join(' · ');
+  h += '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px"><div style="min-width:0"><span class="secttl">' + esc(meta.toLowerCase()) + '</span><h2 style="margin-top:4px">' + (res === 'V' ? 'Victoire' : res === 'D' ? 'Défaite' : res === 'N' ? 'Nulle' : 'Partie') + ', <em>' + esc(g.opening || g.eco || 'ouverture') + '</em></h2><div class="note">' + esc(g.termination || g.result) + '</div></div>' +
+    (g.link ? '<a class="btn small" href="' + esc(g.link) + '" target="_blank" rel="noopener">chess.com ↗</a>' : '') + '</div>';
+  if (!rev) {
+    h += '<div class="coachrow"><div class="coachav">♞</div><div class="bubble"><p>' + (a ? 'Je prépare la revue…' : 'Stockfish analyse ta partie sur ton appareil. Quelques secondes et je te montre tout.') + '</p></div></div>';
+    el.innerHTML = h; return;
+  }
+  h += '<div class="coachrow"><div class="coachav">♞</div><div class="bubble">' + summaryText(g, rev, me).map(function(x){ return '<p>' + esc(x) + '</p>'; }).join('') + '</div></div>';
+  var opp = me === 'w' ? 'b' : 'w';
+  var am = C.accuracy(rev, me), ao = C.accuracy(rev, opp);
+  var nameOf = function(c){ return c === 'w' ? g.white : g.black; };
+  var accCell = function(c, acc, mine){
+    var elo = c === 'w' ? g.whiteElo : g.blackElo, gr = gameRating(acc, elo), d = gr != null && elo ? gr - elo : null;
+    return '<div class="' + (mine ? 'me' : '') + '"><span class="nm"><span class="dot ' + c + '"></span>' + esc(nameOf(c)) + '</span><b>' + (acc != null ? acc.toFixed(1).replace('.', ',') : '–') + '</b><span class="l">précision</span>' +
+      '<div class="gr"><span class="l">niveau dans cette partie</span><strong>' + (gr != null ? gr : '–') + '</strong>' +
+      (elo ? '<span class="l">classement ' + elo + (d != null ? ' · <em class="' + (d > 0 ? 'up' : d < 0 ? 'down' : '') + '">' + (d > 0 ? '▲ +' : d < 0 ? '▼ ' : '= ') + (d || '') + '</em>' : '') + '</span>' : '') + '</div></div>';
+  };
+  h += '<div class="accs">' + (me === 'w' ? accCell('w', am, true) + accCell('b', ao, false) : accCell('w', ao, false) + accCell('b', am, true)) + '</div>';
+  var cw = C.counts(rev, 'w'), cb = C.counts(rev, 'b');
+  h += '<div class="ctable"><span class="hd" style="text-align:left"></span><span class="hd">' + (me === 'w' ? 'toi' : 'blancs') + '</span><span class="hd">' + (me === 'b' ? 'toi' : 'noirs') + '</span>' +
+    ['brillant', 'unique', 'meilleur', 'excellent', 'bon', 'theorie', 'imprecision', 'erreur', 'manquee', 'gaffe'].map(function(k){
+      var z = !cw[k] && !cb[k];
+      return '<span class="lab' + (z ? ' dim' : '') + '">' + clsIcon(k, 20) + '<span>' + C.CLASSES[k].label + '</span></span><span class="n' + (cw[k] ? '' : ' z') + '">' + cw[k] + '</span><span class="n' + (cb[k] ? '' : ' z') + '">' + cb[k] + '</span>';
+    }).join('') + '</div>';
+  h += '<div id="aiGameOut">' + (AI.gameOut[id] || '') + '</div>';
+  el.innerHTML = h;
+}
+
+function bestLineText(fen, pv, startPly){
+  return C.pvSan(fen, pv || [], 6).map(function(s, k){ var p = startPly + k; return (k === 0 || p % 2 === 0 ? moveNo(p).trim() + ' ' : '') + FR(s); }).join(' ');
+}
+function renderCoach(g, rev, a, me){
+  var el = $('#coachCard'), v = S.vx, h = '';
+  // --- dans une variante ---
+  if (v) {
+    if (!v.cur) {
+      var ev0 = evalBefore(v, 0), fen0 = g.fens[v.base];
+      h = '<div class="bt">À toi de jouer</div><p>Joue n’importe quel coup pour explorer cette position.</p>';
+      if (ev0 && ev0.best) h += bestBox(fen0, ev0, v.base, 'Meilleur coup ici');
+    } else {
+      var m = v.moves[v.cur - 1], k = v.cur - 1;
+      h = '<div class="bh"><div class="bt">' + (m.cls ? clsIcon(m.cls, 26) : '') + '<span><span class="mv">' + esc(moveNo(v.base + k) + FR(m.san)) + '</span> ' + (m.cls ? '<span>' + HEAD[m.cls] + '</span>' : '<span class="muted">…</span>') + '</span></div>' + evChip(m.ev) + '</div>';
+      var b4 = evalBefore(v, k), prevFen = k ? v.moves[k - 1].fen : g.fens[v.base];
+      if (m.cls && m.cls !== 'meilleur' && b4 && b4.best) h += bestBox(prevFen, b4, v.base + k, 'Le meilleur coup était');
+      if (!m.ev) h += '<p class="dctx">Stockfish calcule le meilleur coup…</p>';
+      else h += nowBox(m.fen, m.ev, v.base + v.cur);
+    }
+    el.innerHTML = '<div class="coachrow"><div class="coachav">♞</div><div class="bubble">' + h + '</div></div>';
+    bindBestBtns();
+    return;
+  }
+  var ply = S.ply;
+  var r = rev ? rev[ply - 1] : null;
+  if (!r) {
+    el.innerHTML = '<div class="coachrow"><div class="coachav">♞</div><div class="bubble"><div class="bt"><span class="mv">' + esc(moveNo(ply - 1) + FR(g.sans[ply - 1])) + '</span></div><p>En attente de l’analyse.</p></div></div>';
+    return;
+  }
+  var mine = r.mover === me;
+  h = '<div class="bh"><div class="bt">' + clsIcon(r.cls, 28) + '<span><span class="mv">' + esc(FR(r.san)) + '</span> ' + HEAD[r.cls] + '</span></div>' + (a ? evChip(a.evals[r.ply + 1]) : '') + '</div>';
+  var chips = ['<span class="mchip">' + (mine ? 'toi' : 'adversaire') + '</span>'];
+  if (r.spent != null) chips.push('<span class="mchip' + (r.tags.indexOf('trop_vite') >= 0 ? ' warn' : '') + '">⏱ ' + C.fmtTime(r.spent) + '</span>');
+  if (C.BAD[r.cls]) chips.push('<span class="mchip warn">−' + Math.round(r.loss) + ' % de chances</span>');
+  h += '<div class="meta-chips">' + chips.join('') + '</div>';
+  var reasons = r.reasons.filter(function(x){ return x !== 'C’est le coup du moteur.' && !/^Le meilleur coup était/.test(x); });
+  if (r.cls === 'theorie') reasons = ['Coup connu de la théorie : ' + (g.opening || 'ouverture') + '.'];
+  if (reasons.length) h += reasons.length > 1 ? '<ul>' + reasons.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '<p>' + esc(reasons[0]) + '</p>';
+  var evB = a && a.evals[r.ply];
+  var isBest = r.best && r.best.slice(0, 4) === g.uci[r.ply].slice(0, 4);
+  if (evB && evB.best && !isBest && r.cls !== 'force') h += bestBox(g.fens[r.ply], evB, r.ply, 'Le meilleur coup était');
+  else if (evB && evB.pv && evB.pv.length > 1) h += '<div class="bestbox"><span class="secttl">suite du moteur</span><div class="bestline">' + esc(bestLineText(g.fens[r.ply], evB.pv, r.ply)) + '</div></div>';
+  h += nowBox(g.fens[ply], a && a.evals[ply], ply);
+  h += '<div class="bbtns"><button class="bbtn alt" id="aiMove">' + (C.BAD[r.cls] ? 'Pourquoi ?' : 'Explique-moi') + '</button></div>';
+  h += '<div id="aiMoveOut">' + (AI.moveOut[S.cur + ':' + r.ply] || '') + '</div>';
+  el.innerHTML = '<div class="coachrow"><div class="coachav">♞</div><div class="bubble">' + h + '</div></div>';
+  bindBestBtns();
+  var b = $('#aiMove'); if (b) b.addEventListener('click', function(){ AI.move(S.cur, r.ply); });
+}
+// meilleur coup de la position affichée, avant de jouer
+var Hint = { on: (function(){ try { return localStorage.getItem('cc:hint') !== '0'; } catch(e){ return true; } })() };
+function nowBox(fen, ev, ply){
+  if (!Hint.on || !ev || ev.terminal || !ev.best || ev.best === '(none)') return '';
+  var bi = C.uciInfo(fen, ev.best); if (!bi) return '';
+  var side = fen.split(' ')[1] === 'w' ? 'les Blancs' : 'les Noirs';
+  return '<div class="nowbox"><div class="bl"><span class="nowdot">→</span><span>Meilleur coup maintenant pour ' + side + ' : <span class="mono">' + esc(moveNo(ply) + FR(bi.san)) + '</span></span>' + evChip(ev) + '</div>' +
+    (ev.pv && ev.pv.length > 1 ? '<div class="bestline">' + esc(bestLineText(fen, ev.pv, ply)) + '</div>' : '') + '</div>';
+}
+function bestBox(fen, ev, startPly, label){
+  var bi = C.uciInfo(fen, ev.best); if (!bi) return '';
+  return '<div class="bestbox"><div class="bl">' + clsIcon('meilleur', 20) + '<span>' + label + ' <span class="mono">' + esc(FR(bi.san)) + '</span></span>' + evChip(ev) + '</div>' +
+    (ev.pv && ev.pv.length > 1 ? '<div class="bestline">' + esc(bestLineText(fen, ev.pv, startPly)) + '</div>' : '') +
+    (inVar() ? '' : '<div class="bbtns"><button class="bbtn green" data-best="' + startPly + '">Voir le meilleur coup sur l’échiquier</button></div>') + '</div>';
+}
+function bindBestBtns(){ $$('[data-best]').forEach(function(b){ b.addEventListener('click', function(){ showBestLine(+b.dataset.best); }); }); }
+function nextMistake(from){
+  var rev = getReview(S.cur), me = meOf(S.cur); if (!rev) return null;
+  for (var i = from; i < rev.length; i++) if (rev[i] && rev[i].mover === me && C.BAD[rev[i].cls]) return i;
+  return null;
+}
+
+function renderGraph(g, rev, a, me){
+  var svg = $('#graph'); var W = 400, H = 96, n = g.fens.length;
+  if (!a) { svg.innerHTML = '<rect width="400" height="96" fill="#403d39"/><rect y="48" width="400" height="48" fill="#fff"/>'; return; }
+  var X = function(i){ return i / Math.max(1, n - 1) * W; };
+  var pts = a.evals.map(function(e, i){ return [X(i), 5 + (100 - evalToWhitePct(e)) / 100 * (H - 10)]; });
+  if (S.flip) pts = pts.map(function(p){ return [p[0], H - p[1]]; });
+  var area = 'M0,' + H + ' ' + pts.map(function(p){ return 'L' + p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ') + ' L' + W + ',' + H + ' Z';
+  var marks = '';
+  if (rev) rev.forEach(function(r){
+    if (!r || !(r.cls === 'brillant' || r.cls === 'unique' || r.cls === 'erreur' || r.cls === 'manquee' || r.cls === 'gaffe')) return;
+    var p = pts[r.ply + 1];
+    marks += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="' + (r.mover === me ? 4 : 2.6) + '" fill="' + CLS_COLOR(r.cls) + '" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke"/>';
+  });
+  var cx = X(S.vx ? S.vx.base : S.ply).toFixed(1);
+  var top = S.flip ? '#fff' : '#403d39', bot = S.flip ? '#403d39' : '#fff';
+  svg.innerHTML = '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + top + '"/>' +
+    '<path d="' + area + '" fill="' + bot + '"/>' +
+    '<line x1="0" y1="' + H / 2 + '" x2="' + W + '" y2="' + H / 2 + '" stroke="#8b877c" stroke-width="1" stroke-dasharray="2 3" vector-effect="non-scaling-stroke"/>' +
+    '<line x1="' + cx + '" y1="0" x2="' + cx + '" y2="' + H + '" stroke="var(--c-imprecision)" stroke-width="2" vector-effect="non-scaling-stroke"/>' + marks;
+}
+function graphPly(e){
+  var g = S.cur && getGame(S.cur); if (!g) return null;
+  var rect = $('#graph').getBoundingClientRect();
+  return Math.max(0, Math.min(g.fens.length - 1, Math.round((e.clientX - rect.left) / rect.width * (g.fens.length - 1))));
+}
+$('#graph').addEventListener('click', function(e){ var p = graphPly(e); if (p == null) return; S.vx = null; goPly(p); });
+$('#graph').addEventListener('mousemove', function(e){
+  var p = graphPly(e), a = S.cur && S.analyses[S.cur], g = S.cur && getGame(S.cur), tip = $('#gtip');
+  if (p == null || !a) { tip.hidden = true; return; }
+  var rect = this.getBoundingClientRect(), wrap = this.parentNode.getBoundingClientRect();
+  tip.hidden = false;
+  tip.textContent = (p ? moveNo(p - 1) + FR(g.sans[p - 1]) + '  ' : 'Départ  ') + C.fmtEval(a.evals[p]);
+  tip.style.left = (e.clientX - wrap.left) + 'px'; tip.style.top = (rect.top - wrap.top + 4) + 'px';
+});
+$('#graph').addEventListener('mouseleave', function(){ $('#gtip').hidden = true; });
+
+function renderMoves(g, rev){
+  var el = $('#moves'), html = '', curPly = S.vx ? S.vx.base : S.ply;
+  for (var i = 0; i < g.sans.length; i += 2) {
+    html += '<span class="no">' + (i / 2 + 1) + '.</span>';
+    for (var k = i; k < i + 2; k++) {
+      if (k >= g.sans.length) { html += '<span></span>'; continue; }
+      var r = rev && rev[k];
+      var ic = r && r.cls !== 'excellent' && r.cls !== 'bon' && r.cls !== 'force' ? clsIcon(r.cls, 15) : '';
+      html += '<button data-ply="' + (k + 1) + '" class="' + (curPly === k + 1 && !S.vx ? 'cur' : '') + '">' + ic + '<span>' + esc(FR(g.sans[k])) + '</span></button>';
+    }
+  }
+  el.innerHTML = html;
+  $$('button', el).forEach(function(b){ b.addEventListener('click', function(){ S.vx = null; goPly(+b.dataset.ply); }); });
+  var cur = $('button.cur', el); if (cur) { var top = cur.offsetTop - el.offsetTop; if (top < el.scrollTop + 10 || top > el.scrollTop + el.clientHeight - 40) el.scrollTop = top - 90; }
+}
+
+function renderFoot(g, rev, me){
+  var f = $('#rpFoot'), h = '';
+  if (!S.vx && S.ply === 0) {
+    h = '<button class="btn primary" id="fStart">' + (rev ? 'Commencer la revue' : 'Rejouer les coups') + '</button>';
+    var nm = rev ? rev.filter(function(r){ return r && r.mover === me && (r.cls === 'erreur' || r.cls === 'gaffe' || r.cls === 'manquee'); }).length : 0;
+    if (nm) h += '<button class="btn green" id="fTrain">M’entraîner sur mes ' + nm + ' erreur' + (nm > 1 ? 's' : '') + '</button>';
+  } else if (S.vx) {
+    h = '<button class="btn" id="fPrev">◀</button><button class="btn" id="fExit">Retour à la partie</button><button class="btn primary" id="fNext"' + (S.vx.cur >= S.vx.moves.length ? ' disabled' : '') + '>▶</button>';
+  } else {
+    var nx = rev ? nextMistake(S.ply) : null;
+    h = '<button class="btn" id="fPrev">◀ Précédent</button>' + (nx != null ? '<button class="btn" id="fMist">Erreur suivante</button>' : '') + '<button class="btn primary" id="fNext">Suivant ▶</button>';
+  }
+  f.innerHTML = h;
+  var b;
+  if ((b = $('#fStart'))) b.addEventListener('click', function(){ goPly(1); });
+  if ((b = $('#fTrain'))) b.addEventListener('click', function(){ DR.game = S.cur; setTab('entrainement'); openDrill(0); });
+  if ((b = $('#fPrev'))) b.addEventListener('click', function(){ $('#nPrev').click(); });
+  if ((b = $('#fNext'))) b.addEventListener('click', function(){ $('#nNext').click(); });
+  if ((b = $('#fExit'))) b.addEventListener('click', exitVar);
+  if ((b = $('#fMist'))) b.addEventListener('click', function(){ var nx = nextMistake(S.ply); if (nx != null) goPly(nx + 1); });
+}
+$('#toSum').addEventListener('click', function(){ S.vx = null; goPly(0); });
+
+function goPly(p){
+  var g = S.cur && getGame(S.cur);
+  if (g) {
+    p = Math.max(0, Math.min(g.uci.length, p));
+    if (p === S.ply + 1 && p > 0) { var m = g.moves[p - 1]; S.anim = { from: m.from, to: m.to }; Sound.play(Sound.san(m.san, m.captured)); }
+    else if (p === S.ply - 1 && S.ply > 0) { var m2 = g.moves[S.ply - 1]; S.anim = { from: m2.to, to: m2.from }; Sound.play('move'); }
+    else S.anim = null;
+  }
+  S.ply = p; S.vx = null; S.sel = null;
+  renderAnalysis();
+}
+function navPrev(){
+  var v = S.vx;
+  if (v) {
+    if (v.cur > 0) { var m = v.moves[v.cur - 1]; v.cur--; S.anim = { from: m.to, to: m.from }; Sound.play('move'); S.sel = null; renderAnalysis(); }
+    else exitVar();
+    return;
+  }
+  goPly(S.ply - 1);
+}
+function navNext(){
+  var v = S.vx, g = getGame(S.cur); if (!g) return;
+  if (v) {
+    if (v.cur < v.moves.length) { var m = v.moves[v.cur]; v.cur++; S.anim = { from: m.from, to: m.to }; playSound(m); S.sel = null; renderAnalysis(); fillVarEvals(); }
+    return;
+  }
+  goPly(S.ply + 1);
+}
+$('#nFirst').addEventListener('click', function(){ S.vx = null; goPly(0); });
+$('#nPrev').addEventListener('click', navPrev);
+$('#nNext').addEventListener('click', navNext);
+$('#nLast').addEventListener('click', function(){ var g = getGame(S.cur); if (g) { S.vx = null; goPly(g.uci.length); } });
+$('#nFlip').addEventListener('click', function(){ S.flip = !S.flip; renderAnalysis(); });
+$('#nTheme').addEventListener('click', function(){
+  bTheme = BTHEMES[(BTHEMES.indexOf(bTheme) + 1) % BTHEMES.length];
+  try { localStorage.setItem('cc:board', bTheme); } catch(e){}
+  applyBoardTheme();
+});
+$('#nSound').addEventListener('click', function(){
+  Sound.on = !Sound.on; this.setAttribute('aria-pressed', String(Sound.on));
+  try { localStorage.setItem('cc:sound', Sound.on ? '1' : '0'); } catch(e){}
+  if (Sound.on) Sound.play('move');
+});
+$('#nSound').setAttribute('aria-pressed', String(Sound.on));
+$('#nHint').setAttribute('aria-pressed', String(Hint.on));
+$('#nHint').addEventListener('click', function(){
+  Hint.on = !Hint.on; this.setAttribute('aria-pressed', String(Hint.on));
+  try { localStorage.setItem('cc:hint', Hint.on ? '1' : '0'); } catch(e){}
+  renderAnalysis();
+});
+document.addEventListener('keydown', function(e){
+  if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if (S.tab === 'analyse') {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); navPrev(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); navNext(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); $('#nFirst').click(); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); $('#nLast').click(); }
+    if (e.key === 'Escape' && S.vx) { e.preventDefault(); exitVar(); }
+  }
+});
+
+// jouer librement sur l'échiquier d'analyse (variante)
+$('#board').addEventListener('click', function(e){
+  var sqEl = e.target.closest('.sq'); if (!sqEl) return;
+  var g = S.cur && getGame(S.cur); if (!g) return;
+  var sq = sqEl.dataset.sq, fen = curFen();
+  var c = new Chess(fen), p = c.get(sq);
+  if (S.sel) {
+    var mv = c.move({ from: S.sel, to: sq, promotion: 'q' });
+    if (mv) { S.sel = null; playMove(g, mv.from + mv.to + (mv.promotion || '')); return; }
+  }
+  S.sel = p && p.color === c.turn() ? (S.sel === sq ? null : sq) : null;
+  renderAnalysis();
+});
+function playMove(g, uci){
+  var v = S.vx;
+  // c'est le coup de la partie : on avance simplement
+  if (!v && S.ply < g.uci.length && g.uci[S.ply].slice(0, 4) === uci.slice(0, 4)) { goPly(S.ply + 1); return; }
+  // c'est le coup suivant déjà connu de la variante
+  if (v && v.cur < v.moves.length && v.moves[v.cur].uci.slice(0, 4) === uci.slice(0, 4)) { navNext(); return; }
+  if (!v) v = S.vx = { base: S.ply, moves: [], cur: 0 };
+  var m = pushVar(curFen(), uci, null); if (!m) return;
+  v.moves = v.moves.slice(0, v.cur); v.moves.push(m); v.cur++;
+  S.anim = { from: m.from, to: m.to }; playSound(m);
+  renderAnalysis(); fillVarEvals();
+}
+
+// ---------------- coach IA (sample) ----------------
+var AI = {
+  moveOut: {}, gameOut: {}, ctl: null,
+  reset: function(){},
+  render: function(txt){
+    var h = esc(txt).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    var lines = h.split(/\n/), out = [], inList = false;
+    lines.forEach(function(l){
+      var t = l.trim();
+      if (/^[-•*] /.test(t)) { if (!inList) { out.push('<ul>'); inList = true; } out.push('<li>' + t.replace(/^[-•*] /, '') + '</li>'); return; }
+      if (inList) { out.push('</ul>'); inList = false; }
+      if (/^#{1,4} /.test(t)) { out.push('<h4>' + t.replace(/^#+ /, '') + '</h4>'); return; }
+      if (t) out.push('<p>' + t + '</p>');
+    });
+    if (inList) out.push('</ul>');
+    return '<div class="aiout">' + out.join('') + '</div>';
+  },
+  run: function(prompt, outEl, store, key, tier){
+    return (window.claude && window.claude.use ? window.claude.use('sample') : Promise.resolve(null)).then(function(sample){
+      if (!sample) { outEl.innerHTML = '<div class="note">Le coach IA fonctionne quand la page est ouverte dans Claude (app ou claude.ai).</div>'; return; }
+      if (AI.ctl) AI.ctl.abort();
+      var ctl = AI.ctl = new AbortController();
+      outEl.innerHTML = '<div class="note">Le coach réfléchit…</div>';
+      return sample(prompt, { signal: ctl.signal, modelTier: tier || 'default', onText: function(x){ outEl.innerHTML = AI.render(x.text); } })
+        .then(function(res){ var h = AI.render(res.text); store[key] = h; outEl.innerHTML = h; })
+        .catch(function(e){
+          var m = { not_granted: 'Le coach IA n’a pas été autorisé pour cette page.', rate_limited: 'Trop de demandes d’un coup : réessaie dans un instant.', cancelled: '' }[e && e.code];
+          outEl.innerHTML = m === '' ? '' : '<div class="err">' + (m || 'Le coach IA n’a pas pu répondre (' + esc(e && e.code || 'erreur') + ').') + '</div>';
+        });
+    });
+  },
+  boardList: function(fen){
+    var b = C.fenBoard(fen), w = [], k = [];
+    Object.keys(b).sort().forEach(function(s){ var p = b[s]; var t = (p.type === 'p' ? '' : FR(p.type.toUpperCase())) + s; (p.color === 'w' ? w : k).push(t); });
+    return 'Blancs : ' + w.join(', ') + '\nNoirs : ' + k.join(', ');
+  },
+  move: function(id, ply, outEl){
+    var g = getGame(id), rev = getReview(id), a = S.analyses[id], r = rev[ply], me = meOf(id);
+    var mover = r.mover === 'w' ? 'Blancs' : 'Noirs';
+    var prev = g.sans.slice(Math.max(0, ply - 6), ply).map(FR).join(' ');
+    var p = 'Tu es un entraîneur d’échecs bienveillant et précis. Ton élève (environ 550 Elo en blitz, il veut progresser vite) veut comprendre un coup de sa partie.\n' +
+      'Réponds en français, en 4 à 6 phrases courtes, puis une dernière ligne qui commence par « Règle à retenir : ».\n' +
+      'Appuie-toi UNIQUEMENT sur les faits ci-dessous, calculés par Stockfish. N’invente aucune variante ni aucune case : si tu cites un coup, il doit venir de ces données. Notation française (R, D, T, F, C).\n\n' +
+      'Position avant le coup (FEN) : ' + g.fens[ply] + '\n' + AI.boardList(g.fens[ply]) + '\n' +
+      'Trait aux ' + mover + (r.mover === me ? ' (c’est l’élève qui joue)' : ' (c’est l’adversaire de l’élève qui joue)') + '.\n' +
+      'Derniers coups : ' + (prev || '(début de partie)') + '\n' +
+      'Coup joué : ' + FR(r.san) + ' → classé « ' + C.CLASSES[r.cls].label + ' » (perte de ' + r.loss + ' % de chances de gain).\n' +
+      'Évaluation avant : ' + C.fmtEval(a.evals[ply]) + ', après : ' + C.fmtEval(a.evals[ply + 1]) + ' (point de vue des Blancs).\n' +
+      'Meilleur coup selon le moteur : ' + FR(r.bestSan) + ' ; suite principale : ' + r.bestLine.map(FR).join(' ') + '\n' +
+      (a.evals[ply + 1] && a.evals[ply + 1].pv ? 'Meilleure réponse adverse après le coup joué : ' + C.pvSan(g.fens[ply + 1], a.evals[ply + 1].pv, 4).map(FR).join(' ') + '\n' : '') +
+      'Diagnostic automatique : ' + (r.reasons.join(' ') || 'aucun') + '\n' +
+      (r.spent != null ? 'Temps utilisé pour ce coup : ' + C.fmtTime(r.spent) + (r.clock != null ? ', reste ' + C.fmtTime(r.clock) + ' à la pendule' : '') + '.\n' : '') +
+      '\nExplique : ce que le coup joué rate ou permet, pourquoi le meilleur coup est meilleur, et quel réflexe de réflexion aurait évité l’erreur.';
+    var out = outEl || $('#aiMoveOut'); if (!out) return;
+    AI.run(p, out, AI.moveOut, id + ':' + ply);
+  },
+  game: function(id){
+    var g = getGame(id), rev = getReview(id), me = meOf(id);
+    var km = C.keyMoments(rev, me, 5);
+    var cm = C.counts(rev, me);
+    var phases = {};
+    rev.forEach(function(r){ if (r && r.mover === me) { (phases[r.phase] = phases[r.phase] || []).push(r.acc); } });
+    var ph = Object.keys(phases).map(function(k){ var v = phases[k]; return k + ' ' + Math.round(v.reduce(function(x, y){ return x + y; }, 0) / v.length); }).join(', ');
+    var p = 'Tu es l’entraîneur d’échecs d’un joueur de blitz d’environ 550 Elo, motivé et discipliné. Fais le bilan de cette partie en français.\n' +
+      'Format : un titre court (### ), 3 phrases de bilan, puis « ### À travailler » avec 3 puces concrètes et actionnables. Pas de flatterie vide, sois honnête et encourageant.\n' +
+      'Appuie-toi UNIQUEMENT sur les données ci-dessous (Stockfish). Notation française.\n\n' +
+      'L’élève jouait les ' + (me === 'w' ? 'Blancs' : 'Noirs') + '. Résultat : ' + g.result + ' (' + (g.termination || '') + '). Ouverture : ' + (g.opening || g.eco) + '. Cadence : ' + (g.timeControl || '?') + '.\n' +
+      'Précision : ' + C.accuracy(rev, me) + ' (adversaire : ' + C.accuracy(rev, me === 'w' ? 'b' : 'w') + '). Précision par phase : ' + ph + '.\n' +
+      'Répartition de ses coups : ' + Object.keys(cm).filter(function(k){ return cm[k]; }).map(function(k){ return C.CLASSES[k].label + ' ' + cm[k]; }).join(', ') + '.\n' +
+      'Moments clés :\n' + km.map(function(k){ return '- coup ' + moveNo(k.ply) + FR(k.san) + ' (' + C.CLASSES[k.cls].label + ', meilleur : ' + FR(k.bestSan) + ') : ' + k.reasons.join(' ') + (k.spent != null ? ' [joué en ' + C.fmtTime(k.spent) + ']' : ''); }).join('\n');
+    AI.run(p, $('#aiGameOut'), AI.gameOut, id);
+  }
+};
+
+// ---------------- vue : entraînement ----------------
+/* Déroulé d'un exercice :
+   solve  : tu cherches le meilleur coup (2 essais, indice possible)
+   guided : tu n'as pas trouvé → la flèche te montre le coup, tu le joues toi-même
+   line   : coup trouvé → explication + suite de Stockfish : l'adversaire répond tout seul,
+            tu joues tes coups ; quand la ligne connue est finie, le moteur continue.
+   On ne passe à l'exercice suivant que sur ton clic. */
+var DR = { order: [], idx: -1, scored: {} };
+function drillOrder(){
+  var now = Date.now();
+  var all = Object.keys(S.drills).filter(function(d){ return drillData(d) && (!DR.game || d.indexOf(DR.game + '_') === 0); });
+  var due = all.filter(function(d){ return S.drills[d].due <= now; })
+    .sort(function(a, b){ return (S.drills[a].seen ? 0 : 1) - (S.drills[b].seen ? 0 : 1) || S.drills[a].due - S.drills[b].due; });
+  var rest = all.filter(function(d){ return due.indexOf(d) < 0; }).sort(function(a, b){ return (S.drills[b].created || 0) - (S.drills[a].created || 0); });
+  return { list: due.concat(rest), due: due.length };
+}
+function newDrillState(D){
+  return { phase: 'solve', tries: 0, hint: false, fen: D.fen, hist: [], line: D.ev.pv ? D.ev.pv.slice() : [D.ev.best], k: 0, msg: null, msgKind: null, cur: 0, helped: false, thinking: false, wrong: null };
+}
+function openDrill(i){
+  var o = drillOrder(); DR.order = o.list;
+  if (!DR.order.length) { S.drillCur = null; S.drillState = null; renderDrill(); return; }
+  DR.idx = Math.max(0, Math.min(DR.order.length - 1, i));
+  S.drillCur = DR.order[DR.idx]; S.drillSel = null;
+  var D = drillData(S.drillCur); S.drillState = D ? newDrillState(D) : null;
+  renderDrill();
+}
+function scoreDrill(D, ok, clean){
+  if (DR.scored[D.did]) return;
+  DR.scored[D.did] = 1;
+  var s = Object.assign({}, S.drills[D.did]);
+  s.seen = (s.seen || 0) + 1; s.last = Date.now();
+  if (ok && clean) { s.box = Math.min(5, (s.box || 0) + 1); s.ok = (s.ok || 0) + 1; }
+  else if (ok) { s.box = Math.max(1, s.box || 1); s.ok = (s.ok || 0) + 1; }
+  else { s.box = 1; s.ko = (s.ko || 0) + 1; }
+  s.due = Date.now() + (ok ? INTERVALS[s.box] : 1) * DAY - 3600000;
+  Store.put('drills', D.did, s);
+  updateDue();
+}
+function sideToMove(fen){ return fen.split(' ')[1]; }
+function mySide(D){ return D.r.mover; }
+
+function renderDrill(){
+  if (!S.drillCur || !S.drills[S.drillCur] || !S.drillState) { var o = drillOrder(); DR.order = o.list; if (DR.order.length) { openDrill(0); return; } }
+  var card = $('#drillCard'), dEl = $('#dboard');
+  var cnt = [0, 0, 0, 0, 0];
+  Object.keys(S.drills).forEach(function(d){ var b = Math.min(5, Math.max(1, S.drills[d].box || 1)); if (S.drills[d].seen) cnt[b - 1]++; });
+  $('#boxes').innerHTML = ['Boîte 1', 'Boîte 2', 'Boîte 3', 'Boîte 4', 'Boîte 5'].map(function(l, k){ return '<div><b>' + cnt[k] + '</b><span>' + l + '</span></div>'; }).join('');
+  var D = S.drillCur && drillData(S.drillCur);
+  if (!D) {
+    drawBoard(dEl, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', {});
+    var total = Object.keys(S.drills).length;
+    card.innerHTML = '<div class="eyebrow">Entraînement</div><h2>' + (total ? 'Exercices en préparation' : 'Tes erreurs deviendront tes exercices') + '</h2><div class="note">Chaque erreur, gaffe ou occasion manquée d’une partie analysée devient une position à résoudre, que tu revois juste avant de l’oublier.</div><div><button class="btn primary" id="goParties">Voir mes parties</button></div>';
+    $('#goParties').addEventListener('click', function(){ setTab('parties'); });
+    $('#dTop').innerHTML = ''; $('#dNav').innerHTML = '';
+    updateDue(); return;
+  }
+  var st = S.drillState, me = mySide(D);
+  // position affichée (on peut revenir en arrière dans la ligne)
+  var shownFen = st.cur < st.hist.length ? st.hist[st.cur].fenBefore : st.fen;
+  var shownHist = st.hist.slice(0, st.cur);
+  var last = shownHist[shownHist.length - 1];
+  var arrows = [], hl = last ? [last.from, last.to] : [], badge = null, hlColor = null;
+  if (last && last.cls) { badge = { sq: last.to, cls: last.cls }; hlColor = CLS_COLOR(last.cls); }
+  var live = st.cur === st.hist.length;
+  var expected = live ? st.line[st.k] : null;
+  if (live && expected && (st.phase === 'guided' || st.showNext)) arrows.push({ from: expected.slice(0, 2), to: expected.slice(2, 4), color: 'var(--c-meilleur)' });
+  if (live && st.wrong) { hl = [st.wrong.from, st.wrong.to]; hlColor = 'var(--c-gaffe)'; }
+  var targets = null;
+  if (S.drillSel && live) { targets = {}; new Chess(st.fen).moves({ square: S.drillSel, verbose: true }).forEach(function(m){ targets[m.to] = 1; }); }
+  drawBoard(dEl, live && st.wrong ? st.wrong.fenAfter : shownFen, { flip: me === 'b', sel: live ? S.drillSel : null, targets: targets, hint: live && st.hint && st.phase === 'solve' && expected ? expected.slice(0, 2) : null, hl: hl, hlColor: hlColor, arrows: arrows, badge: badge, check: kingInCheck(live && st.wrong ? st.wrong.fenAfter : shownFen) });
+  dEl.setAttribute('data-b', bTheme);
+  if (st.anim) { animatePiece(dEl, st.anim.from, st.anim.to, me === 'b'); st.anim = null; }
+
+  // en-tête : position dans la série
+  var o = drillOrder(), dueN = o.due;
+  $('#dTop').innerHTML = '<div class="row" style="justify-content:space-between"><span class="secttl">exercice ' + (DR.idx + 1) + ' sur ' + DR.order.length + (DR.game ? ' · cette partie' : (dueN ? ' · ' + dueN + ' à revoir aujourd’hui' : '')) + '</span>' + (DR.game ? '<button class="btn small ghost" id="dAll">Toutes mes erreurs</button>' : '<span class="secttl">boîte ' + Math.max(1, S.drills[D.did].box || 1) + '</span>') + '</div>';
+  var da = $('#dAll'); if (da) da.addEventListener('click', function(){ DR.game = null; openDrill(0); });
+
+  var opp = me === 'w' ? D.g.black : D.g.white;
+  var html = '';
+  var ctx = '<p class="dctx">Contre <b>' + esc(opp) + '</b>' + (D.g.ts ? ', ' + new Date(D.g.ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : '') + ' · tu jouais les ' + (me === 'w' ? 'Blancs' : 'Noirs') + '.<br>Dans la partie : ' + clsIcon(D.r.cls, 16) + ' <b class="mono">' + esc(moveNo(D.ply) + FR(D.r.san)) + '</b> (' + C.CLASSES[D.r.cls].label.toLowerCase() + ').</p>';
+  var bubble;
+  if (st.phase === 'solve') {
+    bubble = '<div class="bt">Trouve le meilleur coup</div>' + ctx;
+    if (st.msg) bubble += '<div class="feedback ' + st.msgKind + '">' + st.msg + '</div>';
+    bubble += '<div class="bbtns"><button class="bbtn alt" id="dHint"' + (st.hint ? ' disabled' : '') + '>Indice</button><button class="bbtn alt" id="dGive">Je ne trouve pas</button></div>';
+  } else if (st.phase === 'guided') {
+    var bi = C.uciInfo(st.fen, expected);
+    bubble = '<div class="bt">' + clsIcon('meilleur', 22) + '<span>Le meilleur coup était <span class="mono">' + esc(FR(bi ? bi.san : '')) + '</span></span></div>' + ctx +
+      '<p>' + esc(D.r.reasons.join(' ') || 'Suis la flèche verte.') + '</p>' +
+      '<div class="feedback info">Joue-le toi-même sur l’échiquier en suivant la flèche verte.</div>';
+    if (st.msg) bubble += '<div class="feedback ' + st.msgKind + '">' + st.msg + '</div>';
+  } else {
+    // ligne
+    var bestSan = st.hist[0] ? st.hist[0].san : '';
+    var head = st.helped ? '<div class="bt">' + clsIcon('meilleur', 22) + '<span>Voilà le bon coup : <span class="mono">' + esc(FR(bestSan)) + '</span></span></div>'
+                         : '<div class="bt">' + clsIcon('meilleur', 22) + '<span>Bravo, <span class="mono">' + esc(FR(bestSan)) + '</span> est le meilleur coup !</span></div>';
+    bubble = head;
+    var a = S.analyses[D.id];
+    var evPlayed = a && a.evals[D.ply + 1], evBest = D.ev;
+    bubble += '<div class="cmp"><div>' + clsIcon(D.r.cls, 18) + '<span class="cl">Dans la partie <b class="mono">' + esc(FR(D.r.san)) + '</b></span>' + evChip(evPlayed) + '</div><div>' + clsIcon('meilleur', 18) + '<span class="cl">Meilleur <b class="mono">' + esc(FR(bestSan)) + '</b></span>' + evChip(evBest) + '</div></div>';
+    var why = D.r.reasons.filter(function(x){ return !/^Joué en|^Il ne te restait|^Le meilleur coup était/.test(x); });
+    var adv = function(ev){ if (!ev) return ''; var v = (me === 'w' ? 1 : -1) * C.cpOf(ev); if (ev.mate != null && ev.mate !== 0) return v > 0 ? 'tu as un mat forcé' : 'l’adversaire a un mat forcé'; var x = Math.abs(v) / 100; return x < 0.3 ? 'la position est équilibrée' : (v > 0 ? 'tu as l’avantage (' : 'l’adversaire a l’avantage (') + x.toFixed(1).replace('.', ',') + ' pion' + (x >= 2 ? 's' : '') + ')'; };
+    why.push('Après ' + FR(D.r.san) + ', ' + adv(evPlayed) + ' ; après ' + FR(bestSan) + ', ' + adv(evBest) + '. Ton coup t’a coûté ' + Math.round(D.r.loss) + ' % de chances de gain.');
+    bubble += '<p><b>Pourquoi :</b> ' + esc(why.join(' ')) + '</p>';
+    bubble += '<div id="drAi">' + (AI.moveOut[D.id + ':' + D.ply] || '') + '</div>';
+    bubble += '<div class="bbtns"><button class="bbtn" id="dWhy">Explique-moi en détail</button></div>';
+  }
+  html += '<div class="coachrow"><div class="coachav">♞</div><div class="bubble">' + bubble + '</div></div>';
+
+  if (st.phase === 'line') {
+    // la suite jouée
+    var seq = st.hist.map(function(h, i){
+      var p = D.ply + i;
+      return '<button class="lmv' + (i === st.cur - 1 ? ' cur' : '') + '" data-i="' + (i + 1) + '">' + (i === 0 || p % 2 === 0 ? '<span class="no">' + moveNo(p).trim() + '</span>' : '') + (h.cls ? clsIcon(h.cls, 14) : '') + '<span>' + esc(FR(h.san)) + '</span></button>';
+    }).join('');
+    var turnMine = live && sideToMove(st.fen) === me;
+    var status;
+    if (st.over) status = st.over;
+    else if (!live) status = 'Tu regardes un coup précédent. Reviens au dernier coup pour continuer.';
+    else if (st.thinking) status = 'Stockfish cherche le meilleur coup…';
+    else if (turnMine) status = st.showNext ? 'Joue le coup de la flèche.' : 'À toi : trouve la suite du moteur.';
+    else status = 'L’adversaire répond…';
+    html += '<div class="dline"><div class="row" style="justify-content:space-between"><span class="secttl">Suite de Stockfish</span>' + (live && st.fen ? evChip(st.lastEv) : '') + '</div><div class="lseq">' + seq + '</div>' +
+      '<div class="lstatus">' + esc(status) + '</div>' +
+      (st.msg ? '<div class="feedback ' + st.msgKind + '">' + st.msg + '</div>' : '') +
+      '<div class="row">' +
+        '<button class="btn small" id="lBack"' + (st.cur <= 1 ? ' disabled' : '') + '>◀</button>' +
+        '<button class="btn small" id="lFwd"' + (live ? ' disabled' : '') + '>▶</button>' +
+        (turnMine && !st.over && !st.showNext && !st.thinking ? '<button class="btn small" id="lShow">Montre-moi le coup</button>' : '') +
+        '<button class="btn small ghost" id="lRestart">Recommencer l’exercice</button>' +
+      '</div></div>';
+  }
+  card.innerHTML = html;
+  // navigation entre exercices
+  $('#dNav').innerHTML = '<button class="btn" id="dPrev"' + (DR.idx <= 0 ? ' disabled' : '') + '>◀ Exercice précédent</button>' +
+    '<button class="btn small ghost" id="dOpen">Voir dans la partie</button>' +
+    '<button class="btn primary" id="dNext"' + (DR.idx >= DR.order.length - 1 ? ' disabled' : '') + '>Exercice suivant ▶</button>';
+
+  var b;
+  if ((b = $('#dHint'))) b.addEventListener('click', function(){ st.hint = true; st.msg = 'La bonne pièce est en surbrillance.'; st.msgKind = 'info'; renderDrill(); });
+  if ((b = $('#dGive'))) b.addEventListener('click', function(){ st.phase = 'guided'; st.helped = true; st.msg = null; st.wrong = null; scoreDrill(D, false); renderDrill(); });
+  if ((b = $('#dWhy'))) b.addEventListener('click', function(){ AI.move(D.id, D.ply, $('#drAi')); });
+  if ((b = $('#lBack'))) b.addEventListener('click', function(){ st.cur = Math.max(1, st.cur - 1); st.msg = null; renderDrill(); });
+  if ((b = $('#lFwd'))) b.addEventListener('click', function(){ st.cur = Math.min(st.hist.length, st.cur + 1); var h = st.hist[st.cur - 1]; if (h) st.anim = { from: h.from, to: h.to }; renderDrill(); });
+  if ((b = $('#lShow'))) b.addEventListener('click', function(){ st.showNext = true; st.msg = null; renderDrill(); });
+  if ((b = $('#lRestart'))) b.addEventListener('click', function(){ S.drillState = newDrillState(D); S.drillSel = null; renderDrill(); });
+  $('#dPrev').addEventListener('click', function(){ openDrill(DR.idx - 1); });
+  $('#dNext').addEventListener('click', function(){ openDrill(DR.idx + 1); });
+  $('#dOpen').addEventListener('click', function(){ openGame(D.id, true); goPly(D.ply + 1); });
+  updateDue();
+}
+
+// le coup attendu est joué (par toi ou par l'adversaire) : on avance dans la ligne
+function pushLineMove(D, uci, cls){
+  var st = S.drillState, c = new Chess(st.fen);
+  var mv = c.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || 'q' });
+  if (!mv) return false;
+  st.hist.push({ san: mv.san, from: mv.from, to: mv.to, fenBefore: st.fen, cls: cls || null });
+  st.fen = c.fen(); st.k++; st.cur = st.hist.length; st.anim = { from: mv.from, to: mv.to };
+  Sound.play(Sound.san(mv.san, mv.captured));
+  if (c.in_checkmate()) st.over = 'Échec et mat. Ligne terminée.';
+  else if (c.in_draw() || c.moves().length === 0) st.over = 'Nulle. Ligne terminée.';
+  return true;
+}
+function continueLine(D){
+  var st = S.drillState;
+  if (st.over || S.drillState !== st) return;
+  var me = mySide(D);
+  var ensure = st.k < st.line.length ? Promise.resolve() : (st.thinking = true, renderDrill(), Engine.evalPos(st.fen, 'eclair').then(function(ev){
+    st.thinking = false;
+    if (ev && ev.best && ev.best !== '(none)') { st.line = st.line.concat(ev.pv && ev.pv.length ? ev.pv : [ev.best]); st.lastEv = ev; }
+    else st.over = 'Plus de coup à jouer.';
+  }, function(){ st.thinking = false; st.over = 'Le moteur ne répond pas.'; }));
+  ensure.then(function(){
+    if (S.drillState !== st) return;
+    if (!st.over && sideToMove(st.fen) !== me) {
+      setTimeout(function(){
+        if (S.drillState !== st || st.cur !== st.hist.length) return;
+        pushLineMove(D, st.line[st.k], 'meilleur');
+        Engine.evalPos(st.fen, 'eclair').then(function(ev){ if (S.drillState === st) { st.lastEv = ev; if (st.k >= st.line.length && ev && ev.pv) st.line = st.line.concat(ev.pv); renderDrill(); } }).catch(function(){});
+        renderDrill();
+        continueLine(D);
+      }, 650);
+    }
+    renderDrill();
+  });
+}
+
+$('#dboard').addEventListener('click', function(e){
+  var sqEl = e.target.closest('.sq'); if (!sqEl) return;
+  var D = S.drillCur && drillData(S.drillCur); var st = S.drillState; if (!D || !st) return;
+  if (st.cur !== st.hist.length || st.over || st.thinking) return;
+  var me = mySide(D);
+  if (sideToMove(st.fen) !== me) return;
+  if (st.wrong) { st.wrong = null; }
+  var sq = sqEl.dataset.sq, c = new Chess(st.fen), p = c.get(sq);
+  if (S.drillSel) {
+    var mv = c.move({ from: S.drillSel, to: sq, promotion: 'q' });
+    if (mv) {
+      S.drillSel = null;
+      var uci = mv.from + mv.to, exp = (st.line[st.k] || '').slice(0, 4);
+      var okAlt = false;
+      if (st.phase === 'solve' && D.ev.second && D.ev.second.move && D.ev.second.move.slice(0, 4) === uci) {
+        var sgn = me === 'w' ? 1 : -1;
+        okAlt = C.winPct(sgn * C.cpOf(D.ev)) - C.winPct(sgn * C.cpOf(D.ev.second)) < 3;
+      }
+      if (uci === exp || okAlt) {
+        if (st.phase === 'solve') scoreDrill(D, true, !st.hint && st.tries === 0);
+        if (okAlt && uci !== exp) { st.line = [D.ev.second.move]; }
+        var cls = st.phase === 'solve' ? (D.r.cls === 'manquee' || D.ev.legal > 1 && D.ev.second && C.winPct((me === 'w' ? 1 : -1) * C.cpOf(D.ev)) - C.winPct((me === 'w' ? 1 : -1) * C.cpOf(D.ev.second)) > 18 ? 'unique' : 'meilleur') : (st.phase === 'guided' ? 'meilleur' : (st.showNext ? 'meilleur' : 'meilleur'));
+        st.phase = 'line'; st.msg = null; st.showNext = false;
+        if (!st.lastEv) st.lastEv = null;
+        pushLineMove(D, uci + (mv.promotion || ''), cls);
+        renderDrill();
+        continueLine(D);
+      } else {
+        Sound.play('move');
+        st.wrong = { from: mv.from, to: mv.to, fenAfter: c.fen() };
+        if (st.phase === 'solve') {
+          st.tries++;
+          if (st.tries >= 2) { st.phase = 'guided'; st.helped = true; scoreDrill(D, false); st.msg = '<b class="mono">' + esc(FR(mv.san)) + '</b> n’est pas le meilleur coup. Regarde la flèche et joue le bon coup.'; st.msgKind = 'ko'; }
+          else { st.msg = '<b class="mono">' + esc(FR(mv.san)) + '</b> n’est pas le meilleur coup. Encore un essai.'; st.msgKind = 'ko'; }
+        } else if (st.phase === 'guided') {
+          st.msg = 'Suis la flèche verte : c’est ce coup-là qu’il faut jouer.'; st.msgKind = 'ko';
+        } else {
+          var bi = C.uciInfo(st.fen, st.line[st.k]);
+          st.msg = '<b class="mono">' + esc(FR(mv.san)) + '</b> n’est pas le choix du moteur. Essaie encore, ou touche « Montre-moi le coup ».'; st.msgKind = 'ko';
+        }
+        var keep = st;
+        setTimeout(function(){ if (S.drillState === keep && keep.wrong) { keep.wrong = null; renderDrill(); } }, 900);
+        renderDrill();
+      }
+      return;
+    }
+  }
+  S.drillSel = p && p.color === c.turn() ? (S.drillSel === sq ? null : sq) : null;
+  renderDrill();
+});
+
+// ---------------- vue : profil ----------------
+var AIProfile = { out: '' };
+function bars(rows, opts){
+  opts = opts || {};
+  var max = opts.max || Math.max.apply(null, rows.map(function(r){ return r.v; }).concat([1e-9]));
+  return '<div class="bars">' + rows.map(function(r){
+    return '<div class="bar"><span>' + esc(r.label) + (r.sub ? ' <span class="muted" style="font-size:.74rem">' + esc(r.sub) + '</span>' : '') + '</span><span class="t"><i style="width:' + Math.max(2, r.v / max * 100).toFixed(1) + '%;background:' + (r.color || 'var(--accent)') + '"></i></span><span class="v">' + esc(r.txt != null ? r.txt : r.v) + '</span></div>';
+  }).join('') + '</div>';
+}
+function pct(x){ return Math.round(x * 100) + ' %'; }
+function eloChart(pts){
+  if (pts.length < 2) return '<div class="note">Pas encore assez de parties pour une courbe.</div>';
+  var W = 600, H = 150, pad = 30;
+  var ys = pts.map(function(p){ return p.elo; }), mn = Math.min.apply(null, ys), mx = Math.max.apply(null, ys);
+  var lo = Math.floor((mn - 15) / 25) * 25, hi = Math.ceil((mx + 15) / 25) * 25;
+  var t0 = pts[0].ts, t1 = pts[pts.length - 1].ts || t0 + 1;
+  function X(t){ return pad + (t - t0) / Math.max(1, t1 - t0) * (W - pad - 8); }
+  function Y(v){ return 8 + (hi - v) / (hi - lo) * (H - 28); }
+  var ticks = []; var step = (hi - lo) > 150 ? 50 : 25;
+  for (var v = lo; v <= hi; v += step) ticks.push(v);
+  var d = pts.map(function(p, i){ return (i ? 'L' : 'M') + X(p.ts).toFixed(1) + ',' + Y(p.elo).toFixed(1); }).join(' ');
+  var last = pts[pts.length - 1];
+  return '<div class="scroll-x"><svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;min-width:320px;height:auto;display:block">' +
+    ticks.map(function(v){ return '<line x1="' + pad + '" x2="' + W + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="var(--line)" stroke-width="1"/><text x="' + (pad - 5) + '" y="' + (Y(v) + 3.5) + '" font-size="10" text-anchor="end" fill="var(--muted)" font-family="JetBrains Mono, monospace">' + v + '</text>'; }).join('') +
+    '<path d="' + d + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>' +
+    '<circle cx="' + X(last.ts) + '" cy="' + Y(last.elo) + '" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>' +
+    '<text x="' + pad + '" y="' + (H - 4) + '" font-size="10" fill="var(--muted)">' + new Date(t0).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + '</text>' +
+    '<text x="' + W + '" y="' + (H - 4) + '" font-size="10" text-anchor="end" fill="var(--muted)">' + new Date(t1).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + '</text>' +
+    '</svg></div>';
+}
+function renderProfile(){
+  var el = $('#v-profil');
+  var ids = realIds();
+  var demoOnly = !ids.length;
+  var use = demoOnly ? sortedIds() : ids;
+  var items = use.map(function(id){ var g = getGame(id); return g ? { game: g, me: meOf(id), rev: getReview(id) } : null; }).filter(Boolean);
+  if (!items.length) { el.innerHTML = '<div class="empty">Importe des parties pour voir ton profil.</div>'; return; }
+  var A = C.aggregate(items, S.user), E = A.engine;
+  var played = A.V + A.N + A.D;
+  var score = played ? (A.V + A.N / 2) / played : 0;
+  // Elo dans la cadence la plus jouée
+  var byTc = {}; A.elo.forEach(function(p){ (byTc[p.tclass] = byTc[p.tclass] || []).push(p); });
+  var mainTc = Object.keys(byTc).sort(function(a, b){ return byTc[b].length - byTc[a].length; })[0];
+  var eloPts = (byTc[mainTc] || []).sort(function(a, b){ return a.ts - b.ts; });
+  var eloNow = eloPts.length ? eloPts[eloPts.length - 1].elo : null;
+  var eloDelta = eloPts.length > 1 ? eloNow - eloPts[0].elo : null;
+  var W = C.mainWeakness(A);
+
+  var h = '';
+  if (demoOnly) h += '<div class="empty">Profil calculé sur la partie d’exemple. Importe tes parties pour voir le tien.</div>';
+  h += '<div class="kpis">' +
+    '<div class="kpi"><span>Parties</span><b>' + played + '</b><em class="muted">' + A.V + ' V · ' + A.N + ' N · ' + A.D + ' D</em></div>' +
+    '<div class="kpi"><span>Score</span><b>' + Math.round(score * 100) + ' %</b><em class="muted">Blancs ' + scoreOf(A.byColor.w) + ' · Noirs ' + scoreOf(A.byColor.b) + '</em></div>' +
+    '<div class="kpi"><span>Elo ' + esc(TC_FR[mainTc] || '') + '</span><b>' + (eloNow || '–') + '</b><em style="color:' + (eloDelta > 0 ? 'var(--win)' : eloDelta < 0 ? 'var(--loss)' : 'var(--muted)') + '">' + (eloDelta != null ? (eloDelta > 0 ? '+' : '') + eloDelta + ' sur la période' : '') + '</em></div>' +
+    '<div class="kpi"><span>Précision moyenne</span><b>' + (E.accAvg != null ? E.accAvg.toFixed(1) : '–') + '</b><em class="muted">' + E.games + ' partie' + (E.games > 1 ? 's' : '') + ' analysée' + (E.games > 1 ? 's' : '') + '</em></div></div>';
+
+  if (W) {
+    h += '<div class="weak"><span class="eyebrow">Ton point faible n°1</span><b>' + esc(W.label) + '</b><span>' + W.n + ' fois sur ' + E.games + ' partie' + (E.games > 1 ? 's' : '') + ' analysée' + (E.games > 1 ? 's' : '') + ', soit ' + String(W.perGame).replace('.', ',') + ' par partie. ' + esc(TIPS[W.key] || '') + '</span></div>';
+  }
+  h += '<div class="card" style="display:grid;gap:10px"><div class="row" style="justify-content:space-between"><h2>Plan d’entraînement du coach IA</h2><button class="btn small primary" id="aiProf"' + (E.games ? '' : ' disabled') + '>' + (AIProfile.out ? 'Refaire le bilan' : 'Faire mon bilan') + '</button></div><div class="note">Le coach lit tes statistiques ci-dessous et te propose un plan sur 7 jours.</div><div id="aiProfOut">' + AIProfile.out + '</div></div>';
+
+  h += '<div class="pgrid">';
+  // Elo
+  h += '<div class="card"><h2>Évolution de ton Elo ' + esc((TC_FR[mainTc] || '').toLowerCase()) + '</h2><div style="margin-top:10px">' + eloChart(eloPts) + '</div></div>';
+  // où tu gaffes : temps
+  if (E.games) {
+    var sp = ['< 2 s','2–5 s','5–15 s','> 15 s'].filter(function(k){ return E.spentB[k]; }).map(function(k){ var b = E.spentB[k]; return { label: k, sub: b.n + ' coups', v: b.bad / b.n * 100, txt: (b.bad / b.n * 100).toFixed(1) + ' %', color: 'var(--c-gaffe)' }; });
+    var ck = ['> 1 min','20–60 s','< 20 s'].filter(function(k){ return E.clockB[k]; }).map(function(k){ var b = E.clockB[k]; return { label: k + ' à la pendule', sub: b.n + ' coups', v: b.bad / b.n * 100, txt: (b.bad / b.n * 100).toFixed(1) + ' %', color: 'var(--c-erreur)' }; });
+    h += '<div class="card"><h2>Quand tu fais tes fautes</h2><div class="note">Part d’erreurs et de gaffes selon le temps pris pour jouer le coup.</div>' + (sp.length ? bars(sp) : '<div class="note" style="margin-top:8px">Pas de données de pendule (parties en différé).</div>') +
+      (ck.length ? '<div class="note" style="margin-top:14px">Et selon le temps qu’il te restait :</div>' + bars(ck) : '') + '</div>';
+    // types d'erreurs
+    var tg = Object.keys(E.tags).map(function(k){ return { label: C.TAG_LABELS[k] || k, v: E.tags[k], txt: E.tags[k] }; }).sort(function(a, b){ return b.v - a.v; }).slice(0, 8);
+    h += '<div class="card"><h2>Tes types d’erreurs</h2><div class="note">Repérés automatiquement dans tes erreurs et gaffes.</div>' + (tg.length ? bars(tg) : '<div class="note" style="margin-top:8px">Aucune erreur typée pour l’instant.</div>') + '</div>';
+    // phases
+    var ph = [['ouverture','Ouverture'],['milieu','Milieu de partie'],['finale','Finale']].filter(function(p){ return E.phaseAvg[p[0]] != null; }).map(function(p){ return { label: p[1], v: E.phaseAvg[p[0]], txt: E.phaseAvg[p[0]].toFixed(1) }; });
+    var cls = ['brillant','unique','meilleur','excellent','bon','imprecision','erreur','manquee','gaffe'].map(function(k){ return { label: C.CLASSES[k].label, v: E.moves ? E.cls[k] / E.moves * 100 : 0, txt: (E.moves ? E.cls[k] / E.moves * 100 : 0).toFixed(1) + ' %', color: CLS_COLOR(k) }; });
+    h += '<div class="card"><h2>Précision par phase</h2>' + bars(ph, { max: 100 }) + '<div class="note" style="margin-top:14px">Répartition de tes coups (' + E.moves + ' coups) :</div>' + bars(cls) + '</div>';
+  } else {
+    h += '<div class="card"><h2>Analyse moteur</h2><div class="empty" style="margin-top:10px">Analyse quelques parties (onglet Parties) pour voir quand et comment tu fais tes fautes.</div></div>';
+  }
+  // ouvertures
+  var ops = Object.keys(A.openings).map(function(k){ return A.openings[k]; }).sort(function(a, b){ return b.n - a.n; }).slice(0, 10);
+  h += '<div class="card"><h2>Tes ouvertures</h2><div class="scroll-x" style="margin-top:8px"><table class="tbl"><thead><tr><th>Ouverture</th><th>Avec</th><th style="text-align:right">Parties</th><th style="text-align:right">Score</th></tr></thead><tbody>' +
+    ops.map(function(o){ return '<tr><td>' + esc(o.name) + '</td><td><span class="dot ' + o.color + '" style="display:inline-block;vertical-align:middle"></span></td><td class="n">' + o.n + '</td><td class="n" style="color:' + (o.pts / o.n >= .55 ? 'var(--win)' : o.pts / o.n <= .4 ? 'var(--loss)' : 'inherit') + '">' + Math.round(o.pts / o.n * 100) + ' %</td></tr>'; }).join('') + '</tbody></table></div></div>';
+  // fins de partie
+  var endRows = function(o, color){ return Object.keys(o).sort(function(a, b){ return o[b] - o[a]; }).map(function(k){ return { label: END_FR[k] || k, v: o[k], txt: o[k], color: color }; }); };
+  h += '<div class="card"><h2>Comment se terminent tes parties</h2><div class="note">Tes victoires :</div>' + (Object.keys(A.ends.V).length ? bars(endRows(A.ends.V, 'var(--win)')) : '<div class="note">–</div>') +
+    '<div class="note" style="margin-top:14px">Tes défaites :</div>' + (Object.keys(A.ends.D).length ? bars(endRows(A.ends.D, 'var(--loss)')) : '<div class="note">–</div>') + '</div>';
+  // séries et moment de la journée
+  var ses = ['1','2','3','4+'].filter(function(k){ return A.session[k]; }).map(function(k){ var s = A.session[k]; return { label: k === '1' ? '1re partie' : k === '4+' ? '4e et suivantes' : k + 'e partie', sub: s.n + ' parties', v: s.pts / s.n * 100, txt: pct(s.pts / s.n) }; });
+  var aR = A.afterResult; var nAV = aR.V.V + aR.V.N + aR.V.D, nAD = aR.D.V + aR.D.N + aR.D.D;
+  var hrs = ['matin','après-midi','soir','nuit'].filter(function(k){ return A.hours[k]; }).map(function(k){ var s = A.hours[k]; return { label: k.charAt(0).toUpperCase() + k.slice(1), sub: s.n + ' parties', v: s.pts / s.n * 100, txt: pct(s.pts / s.n) }; });
+  h += '<div class="card"><h2>Fatigue et énervement</h2><div class="note">Ton score selon le rang de la partie dans une même session (moins de 25 min entre deux parties).</div>' + (ses.length ? bars(ses, { max: 100 }) : '') +
+    (nAV + nAD ? '<div class="note" style="margin-top:14px">Juste après une victoire, tu marques <b>' + (nAV ? pct((aR.V.V + aR.V.N / 2) / nAV) : '–') + '</b> ; juste après une défaite, <b>' + (nAD ? pct((aR.D.V + aR.D.N / 2) / nAD) : '–') + '</b>.</div>' : '') +
+    (hrs.length ? '<div class="note" style="margin-top:14px">Selon le moment de la journée :</div>' + bars(hrs, { max: 100 }) : '') + '</div>';
+  h += '</div>';
+  el.innerHTML = h;
+  var ap = $('#aiProf'); if (ap) ap.addEventListener('click', function(){ aiProfile(A, W); });
+}
+function scoreOf(o){ var n = o.V + o.N + o.D; return n ? Math.round((o.V + o.N / 2) / n * 100) + ' %' : '–'; }
+var END_FR = { mat: 'Échec et mat', temps: 'Au temps', abandon: 'Abandon', nulle: 'Nulle', autre: 'Autre' };
+var TIPS = {
+  piece_laissee_en_prise: 'Avant chaque coup, demande-toi : « quelles pièces de mon camp ne sont plus protégées après ce coup ? »',
+  piece_deplacee_en_prise: 'Avant de poser une pièce, vérifie quelles pièces adverses attaquent la case d’arrivée.',
+  gain_rate: 'À chaque coup adverse, cherche d’abord ce qu’il a laissé sans défense : captures avant tout.',
+  fourchette_ratee: 'Cherche les cases d’où un cavalier ou la dame attaque deux pièces à la fois.',
+  echec_rate: 'Passe en revue tous tes échecs possibles avant de jouer : échecs, captures, menaces.',
+  mat_rate: 'Quand le roi adverse est exposé, compte ses cases de fuite avant de jouer.',
+  mat_concede: 'Avant de jouer, regarde les échecs que ton adversaire peut donner au coup suivant.',
+  pas_puni: 'Quand l’adversaire vient de jouer, demande-toi toujours : « qu’est-ce que ce coup a laissé ? »',
+  trop_vite: 'Même en blitz, garde 2 secondes de vérification sur les coups qui changent la position.',
+  zeitnot: 'Joue tes coups d’ouverture plus vite pour garder du temps pour le milieu de partie.',
+  dame_tot: 'Développe cavaliers et fous avant de sortir la dame.',
+  roi_bouge: 'Roque tôt : ton roi est plus en sécurité et ta tour entre en jeu.',
+  meme_piece: 'En ouverture, sors une nouvelle pièce à chaque coup.'
+};
+function aiProfile(A, W){
+  var E = A.engine;
+  var p = 'Tu es l’entraîneur d’échecs personnel de Badis, joueur de blitz d’environ ' + (A.elo.length ? A.elo[A.elo.length - 1].elo : 550) + ' Elo sur chess.com. Il est discipliné, veut progresser vite et apprend mieux avec des méthodes concrètes (rappel actif, révision espacée).\n' +
+    'À partir de ses statistiques réelles ci-dessous, écris en français :\n### Diagnostic\n3 à 4 phrases honnêtes et précises (chiffres à l’appui).\n### Plan sur 7 jours\nUne puce par jour, 20 à 30 minutes chacune, concrète (ex. nombre de problèmes, thème, cadence de jeu, réviser ses positions dans l’onglet Entraînement).\n### La règle d’or\nUne seule phrase à appliquer à chaque coup.\nPas de flatterie vide. N’invente aucun chiffre.\n\n' +
+    'Données :\n- Parties : ' + (A.V + A.N + A.D) + ' (' + A.V + ' V, ' + A.N + ' N, ' + A.D + ' D). Score Blancs ' + scoreOf(A.byColor.w) + ', Noirs ' + scoreOf(A.byColor.b) + '.\n' +
+    '- Précision moyenne : ' + E.accAvg + ' sur ' + E.games + ' parties analysées. Par phase : ouverture ' + E.phaseAvg.ouverture + ', milieu ' + E.phaseAvg.milieu + ', finale ' + E.phaseAvg.finale + '.\n' +
+    '- Gaffes et occasions manquées par partie : ' + E.blundersPerGame + '.\n' +
+    '- Types d’erreurs : ' + Object.keys(E.tags).map(function(k){ return (C.TAG_LABELS[k] || k) + ' ' + E.tags[k]; }).join(', ') + '.\n' +
+    '- Taux d’erreurs selon le temps pris par coup : ' + Object.keys(E.spentB).map(function(k){ return k + ' : ' + (E.spentB[k].bad / E.spentB[k].n * 100).toFixed(1) + ' % (' + E.spentB[k].n + ' coups)'; }).join(' ; ') + '.\n' +
+    '- Selon la pendule restante : ' + Object.keys(E.clockB).map(function(k){ return k + ' : ' + (E.clockB[k].bad / E.clockB[k].n * 100).toFixed(1) + ' %'; }).join(' ; ') + '.\n' +
+    '- Défaites par : ' + Object.keys(A.ends.D).map(function(k){ return (END_FR[k] || k) + ' ' + A.ends.D[k]; }).join(', ') + '. Victoires par : ' + Object.keys(A.ends.V).map(function(k){ return (END_FR[k] || k) + ' ' + A.ends.V[k]; }).join(', ') + '.\n' +
+    '- Score selon le rang dans la session : ' + Object.keys(A.session).map(function(k){ return k + ' : ' + Math.round(A.session[k].pts / A.session[k].n * 100) + ' % (' + A.session[k].n + ')'; }).join(' ; ') + '.\n' +
+    '- Ouvertures : ' + Object.keys(A.openings).slice(0, 8).map(function(k){ var o = A.openings[k]; return k + ' ' + o.n + ' parties, ' + Math.round(o.pts / o.n * 100) + ' %'; }).join(' ; ') + '.\n' +
+    (W ? '- Point faible principal détecté : ' + W.label + ' (' + W.perGame + ' par partie).\n' : '');
+  var out = $('#aiProfOut');
+  AI.run(p, out, AIProfile, 'out', 'default').then(function(){ });
+}
+
+// ---------------- démarrage ----------------
+function ensureDemo(){
+  if (Object.keys(S.games).length) return;
+  var g = C.parseGame(DEMO_PGN); if (!g) return;
+  S.games[g.id] = { pgn: DEMO_PGN, me: 'w', demo: true, added: Date.now() };
+  S.parsed[g.id] = g;
+}
+// parties déposées par Claude dans la boîte de réception partagée
+function importInbox(){
+  if (!window.claude || !window.claude.use) return;
+  window.claude.use('db').then(function(db){
+    if (!db) return;
+    return db.collection('inbox').limit(1000).get().then(function(q){
+      var pgns = q.docs.map(function(d){ var x = d.data(); return x && x.pgn; }).filter(Boolean);
+      if (!pgns.length) return;
+      return importPgns(pgns, 'chess.com').then(function(r){
+        if (!r.added) return;
+        S.lastSync = Date.now(); Store.putProfile();
+        if (S.tab === 'parties') renderGames(); else renderHero();
+        updateDue(); idleChip(); bgPump();
+      });
+    });
+  }).catch(function(){});
+}
+function isPhone(){ try { return window.matchMedia('(max-width: 700px)').matches; } catch(e){ return false; } }
+// balayage horizontal sur l'échiquier d'analyse : coup suivant / précédent
+(function(){
+  var el = document.getElementById('board'), x0 = null, y0 = null, t0 = 0;
+  el.addEventListener('touchstart', function(e){ var t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; t0 = Date.now(); }, { passive: true });
+  el.addEventListener('touchend', function(e){
+    if (x0 == null) return; var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5 && Date.now() - t0 < 600) { S.sel = null; if (dx < 0) navNext(); else navPrev(); }
+  }, { passive: true });
+})();
+// motif camouflage généré (bande d'en-tête, thème « camo »)
+function makeCamo(){
+  try {
+    var W = 180, cv = document.createElement('canvas'); cv.width = W; cv.height = W;
+    var x = cv.getContext('2d'), cs = getComputedStyle(document.documentElement);
+    var col = ['--camo-1', '--camo-2', '--camo-3', '--camo-4'].map(function(k){ return cs.getPropertyValue(k).trim() || '#5f6b3d'; });
+    x.fillStyle = col[2]; x.fillRect(0, 0, W, W);
+    var seed = 7; var rnd = function(){ seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    [col[3], col[1], col[0], col[1]].forEach(function(c, li){
+      x.fillStyle = c;
+      for (var k = 0; k < 9 - li; k++) {
+        var cx = rnd() * W, cy = rnd() * W, r = 14 + rnd() * 22;
+        for (var dx = -W; dx <= W; dx += W) for (var dy = -W; dy <= W; dy += W) {
+          x.beginPath();
+          for (var t = 0; t <= 12; t++) { var a = t / 12 * Math.PI * 2, rr = r * (0.65 + 0.5 * Math.sin(a * 3 + k + li) * rnd()); var px = cx + dx + Math.cos(a) * rr * 1.4, py = cy + dy + Math.sin(a) * rr; t ? x.lineTo(px, py) : x.moveTo(px, py); }
+          x.closePath(); x.fill();
+        }
+      }
+    });
+    document.documentElement.style.setProperty('--camo', 'url(' + cv.toDataURL('image/png') + ')');
+  } catch(e){}
+}
+function boot(){
+  if (STANDALONE) {
+    var ms = $('#macSync'); ms.open = true; $('summary', ms).textContent = 'Synchronisation chess.com';
+    $('#syncNote').textContent = 'Tes nouvelles parties arrivent seules à chaque ouverture. Touche le bouton pour forcer une mise à jour.';
+    $('#importCard').parentNode.insertBefore(ms, $('#importCard'));
+    $('#importCard .secttl').textContent = 'ou coller une partie';
+  }
+  makeCamo();
+  Store.loadLocal();
+  applyBoardTheme();
+  ensureDemo();
+  $('#userIn').value = S.user; $('#depthSel').value = S.mode;
+  setStoreStatus('Sauvegarde : sur cet appareil.');
+  setTab('parties');
+  updateDue();
+  Store.initDb().then(function(ok){
+    startAutoSync();
+    importInbox();
+    if (!ok) { setTimeout(bgPump, 800); return; }
+    setStoreStatus('Sauvegarde : synchronisée entre ton Mac et ton iPhone.');
+    S.parsed = {}; S.reviews = {};
+    var hadReal = realIds().length;
+    if (hadReal) { Object.keys(S.games).forEach(function(id){ if (S.games[id].demo) delete S.games[id]; }); }
+    else ensureDemo();
+    $('#userIn').value = S.user; $('#depthSel').value = S.mode;
+    Object.keys(S.analyses).forEach(function(id){ if (S.games[id] && !S.games[id].demo) buildDrills(id); });
+    if (S.cur && !S.games[S.cur]) S.cur = null;
+    setTab(S.tab);
+    updateDue(); idleChip();
+    setTimeout(bgPump, 800);
+  });
+}
+boot();
+})();
+</script>
