@@ -18,7 +18,8 @@ Fonctionne sur Mac et sur iPhone (Safari → Partager → « Sur l’écran d’
 | `core.js` | logique d’analyse, testable sous Node |
 | `pieces.css` | images des pièces (cburnett, GPL v2+) |
 | `chess.js` | règles des échecs (chess.js 0.10.3, BSD-2) |
-| `stockfish*.js`, `stockfish.wasm` | moteur Stockfish 10 (GPL v3, voir `STOCKFISH-COPYING.txt`, source : github.com/niklasf/stockfish.js) |
+| `sf17.js`, `sf17.wasm` | moteur Stockfish 17.1 NNUE lite (GPL v3, voir `STOCKFISH-COPYING.txt`, source : github.com/nmrugg/stockfish.js) |
+| `stockfish*.js`, `stockfish.wasm` | ancien moteur Stockfish 10, en secours si le premier ne démarre pas |
 | `manifest.webmanifest`, `icon-*.png` | installation comme appli sur téléphone |
 
 ## Données
