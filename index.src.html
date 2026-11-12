@@ -500,7 +500,6 @@ main:has(#v-analyse:not([hidden])){max-width:1480px}
           <div>
             <label class="note" for="userIn">Joueur (pseudo chess.com)</label>
             <div class="row" style="flex-wrap:nowrap"><input type="text" id="userIn" value="" autocapitalize="off" autocomplete="off"><button class="btn small" id="userSave">Changer</button></div>
-            <div class="note">Chaque joueur garde ses propres parties, analyses et exercices sur cet appareil.</div>
             <label class="note" for="depthSel">Profondeur d’analyse</label>
             <select id="depthSel">
               <option value="rapide">Rapide (≈ 20 s par partie)</option>
@@ -638,7 +637,7 @@ var Store = {
   },
   loadLocal: function(){
     var legacy = Store.raw('cc:games', null);
-    S.user = Store.raw('cc:user', legacy ? 'CalcinepasCalcinable' : null); S.mode = Store.raw('cc:mode', S.mode);
+    S.user = Store.raw('cc:user', 'CalcinepasCalcinable'); S.mode = Store.raw('cc:mode', S.mode);
     Store.loadUser();
   },
   saveLocalAll: function(){ Store.lsSet('games', S.games); Store.lsSet('analyses', S.analyses); Store.lsSet('drills', S.drills); },
@@ -2368,7 +2367,6 @@ function boot(){
   ensureDemo();
   $('#userIn').value = S.user || ''; $('#depthSel').value = S.mode; $('#whoami').textContent = S.user || '';
   setStoreStatus('Sauvegarde : sur cet appareil.');
-  if (!S.user) { showWelcome(); setTab('parties'); return; }
   setTab('parties');
   updateDue();
   Store.initDb().then(function(ok){
