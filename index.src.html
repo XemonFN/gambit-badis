@@ -1,4 +1,4 @@
-<title>Gambit Badis</title>
+<title>Badis Gambit</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -410,11 +410,19 @@ main:has(#v-analyse:not([hidden])){max-width:1480px}
 .pbar{height:5px;background:var(--surface-2)}
 .pbar i{display:block;height:100%;background:var(--c-erreur)}
 .pnote{font-size:.85rem;color:var(--ink);border-left:2px solid var(--gold);padding-left:10px}
+.welcomebox{position:fixed;inset:0;z-index:50;background:rgba(8,8,10,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.wcard{width:min(440px,100%);background:var(--surface);border:1px solid var(--line-2);padding:28px 24px;display:grid;gap:12px}
+.wcard h1{font-size:2.6rem;font-weight:500;font-style:italic;line-height:1}
+.wcard h1 em{color:var(--gold)}
+.wcard p{margin:0;color:var(--muted)}
+.wcard .tag{justify-self:start}
+.wcard input{font-size:1rem;padding:12px;font-family:var(--f-body)}
+.wcard .btn{padding:13px}
 /*PIECES*/
 </style>
 
 <header class="top"><div class="top-in">
-  <div class="brand"><b>Gambit Badis</b><span class="tag">club d’échecs privé</span><span class="who" id="whoami">CalcinepasCalcinable</span></div>
+  <div class="brand"><b>Badis Gambit</b><span class="tag">club d’échecs</span><span class="who" id="whoami">CalcinepasCalcinable</span></div>
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="parties" aria-selected="true">Parties</button>
     <button role="tab" data-tab="analyse" aria-selected="false">Analyse</button>
@@ -422,12 +430,24 @@ main:has(#v-analyse:not([hidden])){max-width:1480px}
   </nav>
 </div></header>
 
+<div class="welcomebox" id="welcomeBox" hidden>
+  <div class="wcard">
+    <span class="tag">club d’échecs</span>
+    <h1>Badis <em>Gambit</em></h1>
+    <p>Analyse tes parties chess.com comme sur chess.com, vois le meilleur coup à chaque position et entraîne-toi sur tes propres erreurs.</p>
+    <label class="note" for="wUser">Ton pseudo chess.com</label>
+    <input type="text" id="wUser" placeholder="ex. MagnusCarlsen" autocapitalize="off" autocomplete="off" spellcheck="false">
+    <button class="btn primary" id="wGo">C’est parti</button>
+    <div class="status" id="wErr"></div>
+    <div class="note">Tout reste sur ton appareil. Rien n’est envoyé ailleurs que chess.com.</div>
+  </div>
+</div>
 <main>
   <!-- PARTIES -->
   <section class="view" id="v-parties">
     <div class="welcome">
       <div>
-        <h1 id="heroTitle">Bonsoir, <em>Badis</em>.</h1>
+        <h1 id="heroTitle">Bonsoir.</h1>
         <div class="lede" id="heroLede">Tes parties chess.com arrivent toutes seules, le moteur les analyse, et tes erreurs deviennent tes exercices.</div>
       </div>
       <span class="tag syncchip" id="syncChip"><i></i><span>Import auto sur ton Mac</span></span>
@@ -478,8 +498,9 @@ main:has(#v-analyse:not([hidden])){max-width:1480px}
         <details class="card">
           <summary>Réglages</summary>
           <div>
-            <label class="note" for="userIn">Pseudo chess.com</label>
-            <div class="row" style="flex-wrap:nowrap"><input type="text" id="userIn" value="CalcinepasCalcinable"><button class="btn small" id="userSave">OK</button></div>
+            <label class="note" for="userIn">Joueur (pseudo chess.com)</label>
+            <div class="row" style="flex-wrap:nowrap"><input type="text" id="userIn" value="" autocapitalize="off" autocomplete="off"><button class="btn small" id="userSave">Changer</button></div>
+            <div class="note">Chaque joueur garde ses propres parties, analyses et exercices sur cet appareil.</div>
             <label class="note" for="depthSel">Profondeur d’analyse</label>
             <select id="depthSel">
               <option value="rapide">Rapide (≈ 20 s par partie)</option>
@@ -597,14 +618,28 @@ var S = {
 // ---------------- stockage ----------------
 var Store = {
   kind: 'local', base: null,
-  lsGet: function(k, d){ try{ var v = localStorage.getItem('cc:'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  // les données de chaque joueur sont rangées à part : plusieurs personnes peuvent utiliser le site
+  PER_USER: { games: 1, analyses: 1, drills: 1, lastSync: 1 },
+  key: function(k){ return Store.PER_USER[k] && S.user ? 'cc:u:' + S.user.toLowerCase() + ':' + k : 'cc:' + k; },
+  raw: function(key, d){ try{ var v = localStorage.getItem(key); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  lsGet: function(k, d){ return Store.raw(Store.key(k), d); },
   lsSet: function(k, v){
     if (k === 'games' || k === 'analyses') { var o = {}; Object.keys(v).forEach(function(id){ if (!(S.games[id] && S.games[id].demo)) o[id] = v[id]; }); v = o; }
-    try{ localStorage.setItem('cc:'+k, JSON.stringify(v)); }catch(e){}
+    try{ localStorage.setItem(Store.key(k), JSON.stringify(v)); }catch(e){}
+  },
+  loadUser: function(){
+    S.games = Store.lsGet('games', null); S.analyses = Store.lsGet('analyses', null); S.drills = Store.lsGet('drills', null); S.lastSync = Store.lsGet('lastSync', 0);
+    // ancienne version du site (un seul joueur) : on reprend ses données
+    if (!S.games && S.user && S.user.toLowerCase() === 'calcinepascalcinable' && Store.raw('cc:games', null)) {
+      S.games = Store.raw('cc:games', {}); S.analyses = Store.raw('cc:analyses', {}); S.drills = Store.raw('cc:drills', {}); S.lastSync = Store.raw('cc:lastSync', 0);
+      Store.lsSet('games', S.games); Store.lsSet('analyses', S.analyses); Store.lsSet('drills', S.drills); Store.lsSet('lastSync', S.lastSync);
+    }
+    S.games = S.games || {}; S.analyses = S.analyses || {}; S.drills = S.drills || {};
   },
   loadLocal: function(){
-    S.user = Store.lsGet('user', S.user); S.mode = Store.lsGet('mode', S.mode); S.lastSync = Store.lsGet('lastSync', 0);
-    S.games = Store.lsGet('games', {}); S.analyses = Store.lsGet('analyses', {}); S.drills = Store.lsGet('drills', {});
+    var legacy = Store.raw('cc:games', null);
+    S.user = Store.raw('cc:user', legacy ? 'CalcinepasCalcinable' : null); S.mode = Store.raw('cc:mode', S.mode);
+    Store.loadUser();
   },
   saveLocalAll: function(){ Store.lsSet('games', S.games); Store.lsSet('analyses', S.analyses); Store.lsSet('drills', S.drills); },
   initDb: function(){
@@ -779,7 +814,7 @@ function setEngineStatus(t){ var el = $('#engineStatus'); if (el) el.textContent
 var Run = { token: 0, active: null };
 function analyzeGame(id, onProg){
   var g = getGame(id); if (!g) return Promise.reject(new Error('partie illisible'));
-  var token = Run.token; var evals = []; var mode = S.mode;
+  var token = Run.token; var evals = []; var mode = S.mode; var owner = S.user;
   Run.active = id;
   var i = 0;
   function step(){
@@ -788,6 +823,7 @@ function analyzeGame(id, onProg){
     return Engine.evalPos(g.fens[i], mode).then(function(ev){ evals.push(ev); i++; onProg && onProg(i / g.fens.length); return step(); });
   }
   return step().then(function(){
+    if (S.user !== owner) throw new Error('stop');
     if (Run.token === token) Run.active = null;
     var rec = { mode: mode, at: Date.now(), engine: Engine.id || '', evals: evals.map(slimEval) };
     return Store.put('analyses', id, rec).then(function(){ delete S.reviews[id]; buildDrills(id); return rec; });
@@ -991,7 +1027,8 @@ $('#batchBtn').addEventListener('click', function(){
 function renderHero(){
   var h = new Date().getHours();
   var hello = h < 5 ? 'Encore debout' : h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
-  $('#heroTitle').innerHTML = hello + ', <em>Badis</em>.';
+  var nm = !S.user ? '' : S.user.toLowerCase() === 'calcinepascalcinable' ? 'Badis' : S.user;
+  $('#heroTitle').innerHTML = hello + (nm ? ', <em>' + esc(nm) + '</em>' : '') + '.';
   var ids = realIds(), due = dueList().length;
   var analyzed = ids.filter(function(id){ return S.analyses[id]; });
   var accs = analyzed.slice(0, 10).map(function(id){ var r = getReview(id); return r ? C.accuracy(r, meOf(id)) : null; }).filter(function(x){ return x != null; });
@@ -1038,9 +1075,36 @@ $('#pgnBtn').addEventListener('click', function(){
   });
 });
 $('#userSave').addEventListener('click', function(){
-  var v = $('#userIn').value.trim(); if (!v) return;
-  S.user = v; Store.putProfile(); S.reviews = {}; renderGames();
+  var v = $('#userIn').value.trim(); if (!v || (S.user && v.toLowerCase() === S.user.toLowerCase())) return;
+  switchUser(v);
 });
+// changer de joueur : chaque joueur retrouve ses propres parties, analyses et exercices
+function switchUser(v){
+  Run.token++; Engine.stop(); BG.running = false;
+  S.user = v; try { localStorage.setItem('cc:user', JSON.stringify(v)); } catch(e){}
+  Store.loadUser();
+  S.parsed = {}; S.reviews = {}; S.cur = null; S.vx = null; S.drillCur = null; S.drillState = null;
+  DR.order = []; DR.game = null; DR.tag = null; GP.key = ''; PAT.key = '';
+  if (!realIds().length) ensureDemo();
+  $('#userIn').value = S.user; $('#whoami').textContent = S.user;
+  setTab('parties'); updateDue();
+  if (STANDALONE) syncNow(false).then(function(){ bgPump(); }); else bgPump();
+}
+// premier passage : on demande le pseudo chess.com
+function showWelcome(){
+  var w = $('#welcomeBox'); w.hidden = false;
+  var go = function(){
+    var v = $('#wUser').value.trim().replace(/^@/, ''); if (!v) { $('#wErr').textContent = 'Écris ton pseudo chess.com.'; return; }
+    $('#wGo').disabled = true; $('#wErr').textContent = 'Vérification…';
+    var check = STANDALONE ? fetch('https://api.chess.com/pub/player/' + encodeURIComponent(v.toLowerCase())).then(function(r){ if (r.status === 404) throw { msg: 'Ce pseudo n’existe pas sur chess.com.' }; return r.ok ? r.json() : { username: v }; }) : Promise.resolve({ username: v });
+    check.then(function(pl){ w.hidden = true; switchUser(pl && pl.username ? pl.username : v); })
+      .catch(function(e){ $('#wErr').textContent = (e && e.msg) || 'chess.com ne répond pas, réessaie.'; })
+      .then(function(){ $('#wGo').disabled = false; });
+  };
+  $('#wGo').addEventListener('click', go);
+  $('#wUser').addEventListener('keydown', function(e){ if (e.key === 'Enter') go(); });
+  setTimeout(function(){ try { $('#wUser').focus(); } catch(e){} }, 50);
+}
 $('#depthSel').addEventListener('change', function(e){ S.mode = e.target.value; Store.putProfile(); });
 
 // ---------------- synchronisation chess.com (app Claude sur Mac) ----------------
@@ -2302,8 +2366,9 @@ function boot(){
   Store.loadLocal();
   applyBoardTheme();
   ensureDemo();
-  $('#userIn').value = S.user; $('#depthSel').value = S.mode;
+  $('#userIn').value = S.user || ''; $('#depthSel').value = S.mode; $('#whoami').textContent = S.user || '';
   setStoreStatus('Sauvegarde : sur cet appareil.');
+  if (!S.user) { showWelcome(); setTab('parties'); return; }
   setTab('parties');
   updateDue();
   Store.initDb().then(function(ok){

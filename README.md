@@ -1,4 +1,4 @@
-# Gambit Badis
+# Badis Gambit
 
 Mon analyseur de parties chess.com : import automatique par pseudo, analyse Stockfish directement dans le navigateur, revue coup par coup avec les mêmes catégories que chess.com (Brillant, Meilleur, Gaffe…), meilleur coup affiché à chaque position, variantes libres, niveau estimé par partie, et entraînement en révision espacée sur mes propres erreurs.
 

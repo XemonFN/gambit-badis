@@ -1,7 +1,7 @@
 {
-  "name": "Gambit Badis",
-  "short_name": "Gambit Badis",
-  "description": "Analyse de mes parties chess.com et entraînement sur mes erreurs.",
+  "name": "Badis Gambit",
+  "short_name": "Badis Gambit",
+  "description": "Analyse tes parties chess.com et entraîne-toi sur tes erreurs.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",
