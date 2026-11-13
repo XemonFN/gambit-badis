@@ -439,6 +439,9 @@ main:has(#v-analyse:not([hidden])){max-width:1480px}
 .wcard .tag{justify-self:start}
 .wcard input{font-size:1rem;padding:12px;font-family:var(--f-body)}
 .wcard .btn{padding:13px}
+.lmv.demo{border-style:dashed;color:var(--muted)}
+.lmv.demo.cur{color:#fff}
+.lsep{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);align-self:center;padding:0 2px}
 .pc.wP{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHBhdGggZD0iTTIyLjUgOWMtMi4yMSAwLTQgMS43OS00IDQgMCAuODkuMjkgMS43MS43OCAyLjM4QzE3LjMzIDE2LjUgMTYgMTguNTkgMTYgMjFjMCAyLjAzLjk0IDMuODQgMi40MSA1LjAzLTMgMS4wNi03LjQxIDUuNTUtNy40MSAxMy40N2gyM2MwLTcuOTItNC40MS0xMi40MS03LjQxLTEzLjQ3IDEuNDctMS4xOSAyLjQxLTMgMi40MS01LjAzIDAtMi40MS0xLjMzLTQuNS0zLjI4LTUuNjIuNDktLjY3Ljc4LTEuNDkuNzgtMi4zOCAwLTIuMjEtMS43OS00LTQtNHoiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==')}
 .pc.wB{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxnIGZpbGw9IiNmZmYiIHN0cm9rZS1saW5lY2FwPSJidXR0Ij48cGF0aCBkPSJNOSAzNmMzLjM5LS45NyAxMC4xMS40MyAxMy41LTIgMy4zOSAyLjQzIDEwLjExIDEuMDMgMTMuNSAyIDAgMCAxLjY1LjU0IDMgMi0uNjguOTctMS42NS45OS0zIC41LTMuMzktLjk3LTEwLjExLjQ2LTEzLjUtMS0zLjM5IDEuNDYtMTAuMTEuMDMtMTMuNSAxLTEuMzU0LjQ5LTIuMzIzLjQ3LTMtLjUgMS4zNTQtMS45NCAzLTIgMy0yeiIvPjxwYXRoIGQ9Ik0xNSAzMmMyLjUgMi41IDEyLjUgMi41IDE1IDAgLjUtMS41IDAtMiAwLTIgMC0yLjUtMi41LTQtMi41LTQgNS41LTEuNSA2LTExLjUtNS0xNS41LTExIDQtMTAuNSAxNC01IDE1LjUgMCAwLTIuNSAxLjUtMi41IDQgMCAwLS41LjUgMCAyeiIvPjxwYXRoIGQ9Ik0yNSA4YTIuNSAyLjUgMCAxIDEtNSAwIDIuNSAyLjUgMCAxIDEgNSAweiIvPjwvZz48cGF0aCBkPSJNMTcuNSAyNmgxME0xNSAzMGgxNW0tNy41LTE0LjV2NU0yMCAxOGg1IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PC9nPjwvc3ZnPg==')}
 .pc.wN{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMiAxMGMxMC41IDEgMTYuNSA4IDE2IDI5SDE1YzAtOSAxMC02LjUgOC0yMSIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik0yNCAxOGMuMzggMi45MS01LjU1IDcuMzctOCA5LTMgMi0yLjgyIDQuMzQtNSA0LTEuMDQyLS45NCAxLjQxLTMuMDQgMC0zLTEgMCAuMTkgMS4yMy0xIDItMSAwLTQuMDAzIDEtNC00IDAtMiA2LTEyIDYtMTJzMS44OS0xLjkgMi0zLjVjLS43My0uOTk0LS41LTItLjUtMyAxLTEgMyAyLjUgMyAyLjVoMnMuNzgtMS45OTIgMi41LTNjMSAwIDEgMyAxIDMiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNOS41IDI1LjVhLjUuNSAwIDEgMS0xIDAgLjUuNSAwIDEgMSAxIDB6bTUuNDMzLTkuNzVhLjUgMS41IDMwIDEgMS0uODY2LS41LjUgMS41IDMwIDEgMSAuODY2LjV6IiBmaWxsPSIjMDAwIi8+PC9nPjwvc3ZnPg==')}
@@ -805,7 +808,7 @@ var Engine = {
       var mp = l.match(/ multipv (\d+)/); var k = mp ? +mp[1] : 1;
       var cp = l.match(/ score cp (-?\d+)/), mt = l.match(/ score mate (-?\d+)/);
       if (/ (lowerbound|upperbound)/.test(l)) return;
-      job.lines[k] = { cp: cp ? +cp[1] : null, mate: mt ? +mt[1] : null, pv: l.split(' pv ')[1].trim().split(' ').slice(0, 10) };
+      job.lines[k] = { cp: cp ? +cp[1] : null, mate: mt ? +mt[1] : null, pv: l.split(' pv ')[1].trim().split(' ').slice(0, 14) };
     } else if (l.indexOf('bestmove') === 0) {
       Engine.busy = null;
       job.resolve({ best: l.split(' ')[1], lines: job.lines });
@@ -866,7 +869,7 @@ function slimEval(e){
   if (e.mate != null) o.mate = e.mate;
   if (e.terminal) o.terminal = true;
   if (e.best) o.best = e.best;
-  if (e.pv) o.pv = e.pv.slice(0, 8);
+  if (e.pv) o.pv = e.pv.slice(0, 12);
   if (e.second) o.second = e.second;
   return o;
 }
@@ -1980,6 +1983,78 @@ function finishDrill(D, text){
   var st = S.drillState; if (!st || st.over) return;
   st.over = text || 'Exercice terminé.';
   scoreDrill(D, !st.helped, !st.hint && st.tries === 0);
+  prepareDemo(D);
+}
+
+/* ---- « pourquoi c'est gagnant » : la suite du moteur, montrée seulement quand l'idée n'est pas évidente ---- */
+function materialOf(fen, color){ var b = C.fenBoard(fen), t = 0; Object.keys(b).forEach(function(q){ var p = b[q]; if (p.color === color && p.type !== 'k') t += C.VAL[p.type]; }); return t; }
+function balance(fen, me){ return materialOf(fen, me) - materialOf(fen, me === 'w' ? 'b' : 'w'); }
+// le coup gagne tout de suite quelque chose de visible (mat, ou matériel qui ne revient pas)
+function obviousPoint(D){
+  var line = D.ev.pv || [D.ev.best], me = mySide(D);
+  var c = new Chess(D.fen), m1 = c.move({ from: line[0].slice(0, 2), to: line[0].slice(2, 4), promotion: line[0][4] || 'q' });
+  if (!m1) return true;
+  if (c.in_checkmate()) return true;
+  if (line[1]) c.move({ from: line[1].slice(0, 2), to: line[1].slice(2, 4), promotion: line[1][4] || 'q' });
+  var gain = balance(c.fen(), me) - balance(D.fen, me);
+  return !!(m1.captured && C.VAL[m1.captured] >= 3 && gain >= 2);
+}
+function prepareDemo(D){
+  var st = S.drillState; if (!st || st.review) return;
+  var rest = st.line.slice(st.k);
+  st.obvious = obviousPoint(D);
+  if (st.obvious || !rest.length || /mat|Nulle/.test(st.over)) { st.summary = demoSummary(D, st.fen); return; }
+  // on s'arrête dès que l'idée est réalisée (matériel gagné qui reste, mat, promotion), 6 demi-coups au plus
+  var start = st.fen, mv = [], c = new Chess(start), me = mySide(D), b0 = balance(D.fen, me), stop = false;
+  var a = S.analyses[D.id], evP = a && a.evals[D.ply + 1], sgn = me === 'w' ? 1 : -1;
+  var defensive = evP && sgn * C.cpOf(evP) < -150 && sgn * C.cpOf(D.ev) > -80;
+  var maxP = defensive ? 4 : 6;
+  rest.forEach(function(u){
+    if (stop || mv.length >= maxP) return;
+    var m = c.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' }); if (!m) { stop = true; return; }
+    mv.push(u);
+    if (c.in_checkmate() || (m.promotion && m.color === me)) stop = true;
+    else if (m.color !== me && balance(c.fen(), me) - b0 >= 1) stop = true;
+  });
+  st.demo = { moves: mv, i: 0, playing: true, from: st.hist.length, startFen: start };
+  st.summary = null;
+  setTimeout(function(){ stepDemo(D, st); }, 900);
+}
+function stepDemo(D, st){
+  if (S.drillState !== st || !st.demo || !st.demo.playing) return;
+  var dm = st.demo;
+  if (dm.i >= dm.moves.length) { dm.playing = false; st.summary = demoSummary(D, st.fen); renderDrill(); return; }
+  if (st.cur !== st.hist.length) { dm.playing = false; renderDrill(); return; }
+  var c = new Chess(st.fen), u = dm.moves[dm.i], m = c.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' });
+  if (!m) { dm.playing = false; st.summary = demoSummary(D, st.fen); renderDrill(); return; }
+  st.hist.push({ san: m.san, from: m.from, to: m.to, fenBefore: st.fen, cls: null, demo: true });
+  st.fen = c.fen(); st.cur = st.hist.length; st.anim = { from: m.from, to: m.to }; dm.i++;
+  Sound.play(Sound.san(m.san, m.captured));
+  if (c.in_checkmate()) dm.i = dm.moves.length;
+  renderDrill();
+  setTimeout(function(){ stepDemo(D, st); }, 1100);
+}
+// ce qu'on obtient au bout de la suite
+function demoSummary(D, endFen){
+  var me = mySide(D), ev = D.ev, sgn = me === 'w' ? 1 : -1;
+  var c = new Chess(endFen);
+  if (c.in_checkmate()) return (sideToMove(endFen) !== me ? 'Échec et mat : c’était gagnant.' : 'La suite mène au mat.');
+  if (ev.mate != null && ev.mate !== 0 && sgn * ev.mate > 0) return 'Ce coup mène à un mat forcé en ' + Math.abs(ev.mate) + '.';
+  var gain = balance(endFen, me) - balance(D.fen, me);
+  var promo = false, cc = new Chess(D.fen);
+  (D.ev.pv || []).slice(0, 12).forEach(function(u){ var m = cc.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || 'q' }); if (m && m.promotion && m.color === me) promo = true; });
+  var a = S.analyses[D.id], evPlayed = a && a.evals[D.ply + 1];
+  var vBest = sgn * C.cpOf(ev), vPlayed = evPlayed ? sgn * C.cpOf(evPlayed) : null;
+  var NAMES = { 1: 'un pion', 2: 'deux pions', 3: 'une pièce (fou ou cavalier)', 5: 'une tour', 9: 'la dame' };
+  if (promo) return 'L’idée : ton pion va à dame.';
+  if (gain >= 1) return 'Au bout de la suite, tu gagnes ' + (NAMES[gain] || gain + ' points de matériel') + '.';
+  if (vPlayed != null && vPlayed < -150 && vBest > -80) {
+    var lost = evPlayed.mate != null && evPlayed.mate !== 0 ? 'l’adversaire avait un mat forcé' : 'tu perdais du matériel (' + C.fmtEval(evPlayed) + ')';
+    return 'Avec ' + FR(D.r.san) + ', ' + lost + '. Avec ' + FR(C.uciInfo(D.fen, D.ev.best).san) + ', tu l’évites' + (vBest > 150 ? ' et tu restes gagnant (' + C.fmtEval(ev) + ').' : '.');
+  }
+  if (vBest > 150) return 'La suite te laisse une position gagnante (' + C.fmtEval(ev) + ').';
+  if (vPlayed != null) return 'Avec ce coup tu restes à ' + C.fmtEval(ev) + ' au lieu de ' + C.fmtEval(evPlayed) + '.';
+  return '';
 }
 
 // erreurs récurrentes : ce qui revient le plus dans tes fautes, toutes parties confondues
@@ -2076,13 +2151,14 @@ function renderDrill(){
     bubble += '<p><b>Pourquoi :</b> ' + esc(why.join(' ')) + '</p>';
     var seq = st.hist.map(function(h, i){
       var p = D.ply + i;
-      return '<button class="lmv' + (i === st.cur - 1 ? ' cur' : '') + '" data-i="' + (i + 1) + '">' + (i === 0 || p % 2 === 0 ? '<span class="no">' + moveNo(p).trim() + '</span>' : '') + (h.cls ? clsIcon(h.cls, 14) : '') + '<span>' + esc(FR(h.san)) + '</span></button>';
+      return (h.demo && (i === 0 || !st.hist[i - 1].demo) ? '<span class="lsep">puis</span>' : '') + '<button class="lmv' + (h.demo ? ' demo' : '') + (i === st.cur - 1 ? ' cur' : '') + '" data-i="' + (i + 1) + '">' + (i === 0 || p % 2 === 0 ? '<span class="no">' + moveNo(p).trim() + '</span>' : '') + (h.cls ? clsIcon(h.cls, 14) : '') + '<span>' + esc(FR(h.san)) + '</span></button>';
     }).join('');
     var turnMine = live && !st.over && sideToMove(st.fen) === me;
-    var status = st.over ? st.over : !live ? 'Tu regardes un coup précédent.' : turnMine ? (st.showNext ? 'Joue le coup de la flèche.' : 'Continue : trouve le coup suivant.') : 'L’adversaire répond…';
+    var status = st.over ? (st.demo && st.demo.playing ? 'Regarde la suite : voilà pourquoi c’est le meilleur coup…' : st.over) : !live ? 'Tu regardes un coup précédent.' : turnMine ? (st.showNext ? 'Joue le coup de la flèche.' : 'Continue : trouve le coup suivant.') : 'L’adversaire répond…';
     bubble += '<div class="dline"><div class="lseq">' + seq + '</div><div class="lstatus">' + (st.over ? '✓ ' : '') + esc(status) + '</div>' +
       (st.msg ? '<div class="feedback ' + st.msgKind + '">' + st.msg + '</div>' : '') +
-      '<div class="bbtns">' + (st.hist.length > 1 ? '<button class="bbtn alt" id="lBack"' + (st.cur <= 1 ? ' disabled' : '') + '>◀</button><button class="bbtn alt" id="lFwd"' + (live ? ' disabled' : '') + '>▶</button>' : '') +
+      (st.summary ? '<div class="feedback ok">' + esc(st.summary) + '</div>' : '') +
+      '<div class="bbtns">' + (st.demo && !st.demo.playing ? '<button class="bbtn alt" id="lReplay">↺ Revoir la suite</button>' : '') + (st.hist.length > 1 ? '<button class="bbtn alt" id="lBack"' + (st.cur <= 1 ? ' disabled' : '') + '>◀</button><button class="bbtn alt" id="lFwd"' + (live ? ' disabled' : '') + '>▶</button>' : '') +
       (turnMine && !st.showNext ? '<button class="bbtn alt" id="lShow">Montre-moi le coup</button>' : '') +
       (st.over && !st.review ? '<button class="bbtn alt" id="dWhy">Explique-moi en détail</button>' : '') + '</div>' +
       '<div id="drAi">' + (AI.moveOut[D.id + ':' + D.ply] || '') + '</div></div>';
@@ -2100,6 +2176,11 @@ function renderDrill(){
   if ((b = $('#lBack'))) b.addEventListener('click', function(){ st.cur = Math.max(1, st.cur - 1); st.msg = null; renderDrill(); });
   if ((b = $('#lFwd'))) b.addEventListener('click', function(){ st.cur = Math.min(st.hist.length, st.cur + 1); var h = st.hist[st.cur - 1]; if (h) st.anim = { from: h.from, to: h.to }; renderDrill(); });
   if ((b = $('#lShow'))) b.addEventListener('click', function(){ st.showNext = true; st.msg = null; renderDrill(); });
+  if ((b = $('#lReplay'))) b.addEventListener('click', function(){
+    var dm = st.demo, keep = dm.from;
+    st.hist = st.hist.slice(0, keep); st.cur = keep; st.fen = dm.startFen;
+    dm.i = 0; dm.playing = true; st.summary = null; renderDrill(); setTimeout(function(){ stepDemo(D, st); }, 500);
+  });
   var next = function(){ openDrill(DR.idx + 1, true); };
   if ((b = $('#dNext2'))) b.addEventListener('click', next);
   if ((b = $('#dEnd'))) b.addEventListener('click', function(){ setTab('parties'); });
