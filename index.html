@@ -538,8 +538,8 @@ main:has(#v-analyse:not([hidden])){max-width:1480px}
             <div class="row" style="flex-wrap:nowrap"><input type="text" id="userIn" value="" autocapitalize="off" autocomplete="off"><button class="btn small" id="userSave">Changer</button></div>
             <label class="note" for="depthSel">Profondeur d’analyse</label>
             <select id="depthSel">
-              <option value="rapide">Rapide (≈ 20 s par partie)</option>
-              <option value="profonde">Profonde (≈ 1 min par partie, plus précis)</option>
+              <option value="rapide">Rapide (≈ 1 min par partie)</option>
+              <option value="profonde">Profonde (≈ 3 min par partie, plus précis)</option>
             </select>
             <div class="status" id="engineStatus">Moteur : en attente</div>
             <div class="status" id="storeStatus"></div>
@@ -847,22 +847,36 @@ var Engine = {
 function setEngineStatus(t){ var el = $('#engineStatus'); if (el) el.textContent = t; }
 
 var Run = { token: 0, active: null };
-function analyzeGame(id, onProg){
+// analyse interrompue (onglet fermé, iPhone en veille…) : on garde les positions déjà calculées
+var Partial = { get: function(){ try { return JSON.parse(localStorage.getItem('cc:partial') || 'null'); } catch(e){ return null; } },
+  set: function(o){ try { if (o) localStorage.setItem('cc:partial', JSON.stringify(o)); else localStorage.removeItem('cc:partial'); } catch(e){} } };
+function analyzeGame(id, onProg, forceMode){
   var g = getGame(id); if (!g) return Promise.reject(new Error('partie illisible'));
-  var token = Run.token; var evals = []; var mode = S.mode; var owner = S.user;
-  Run.active = id;
-  var i = 0;
+  var token = Run.token; var mode = forceMode || S.mode; var owner = S.user;
+  return Engine.start().then(function(){
+  var evals = [];
+  var pa = Partial.get();
+  if (pa && pa.id === id && pa.mode === mode && pa.engine === Engine.id && pa.user === owner && pa.evals && pa.evals.length < g.fens.length) evals = pa.evals.slice();
+  Run.active = id; Run.owner = token;
+  var i = evals.length;
+  if (i) onProg && onProg(i / g.fens.length);
   function step(){
     if (token !== Run.token) return Promise.reject(new Error('stop'));
     if (i >= g.fens.length) return Promise.resolve();
-    return Engine.evalPos(g.fens[i], mode).then(function(ev){ evals.push(ev); i++; onProg && onProg(i / g.fens.length); return step(); });
+    return Engine.evalPos(g.fens[i], mode).then(function(ev){
+      evals.push(slimEval(ev)); i++; onProg && onProg(i / g.fens.length);
+      if (i % 4 === 0) Partial.set({ id: id, mode: mode, engine: Engine.id, user: owner, evals: evals });
+      return step();
+    });
   }
   return step().then(function(){
     if (S.user !== owner) throw new Error('stop');
-    if (Run.token === token) Run.active = null;
+    Partial.set(null);
+    if (Run.owner === token) Run.active = null;
     var rec = { mode: mode, at: Date.now(), engine: Engine.id || '', evals: evals.map(slimEval) };
     return Store.put('analyses', id, rec).then(function(){ delete S.reviews[id]; buildDrills(id); return rec; });
-  }, function(e){ if (Run.token === token) Run.active = null; throw e; });
+  }, function(e){ if (Run.owner === token) Run.active = null; throw e; });
+  });
 }
 function slimEval(e){
   var o = { cp: e.cp, legal: e.legal };
@@ -1017,11 +1031,16 @@ var BG = { paused: false, running: false, id: null, frac: 0 };
 try { BG.paused = localStorage.getItem('cc:bgPaused') === '1'; } catch(e){}
 // parties à analyser : jamais analysées d'abord, puis celles analysées avec l'ancien moteur (Stockfish 10)
 var ENGINE_TARGET = typeof WebAssembly === 'object' ? 'sf17' : 'sf10';
+// 1er temps : aperçu éclair (≈ 15 s par partie) pour que les nouvelles parties soient tout de suite lisibles.
+// 2e temps : analyse complète, partie par partie, des plus récentes aux plus anciennes.
+function bgFresh(){ return realIds().filter(function(id){ return !S.analyses[id]; }); }
+function needsRefine(a){
+  if (!a) return false;
+  if (a.mode === 'eclair') return true;
+  return ENGINE_TARGET === 'sf17' && Engine.id !== 'sf10' && a.engine !== 'sf17';
+}
 function bgTodo(){
-  var ids = realIds();
-  var fresh = ids.filter(function(id){ return !S.analyses[id]; });
-  var old = ENGINE_TARGET === 'sf17' && Engine.id !== 'sf10' ? ids.filter(function(id){ var a = S.analyses[id]; return a && a.engine !== 'sf17'; }) : [];
-  return fresh.concat(old);
+  return bgFresh().concat(realIds().filter(function(id){ return needsRefine(S.analyses[id]); }));
 }
 function updateBgStatus(){
   var all = realIds().length, todo = bgTodo().length, done = all - todo;
@@ -1034,22 +1053,27 @@ function updateBgStatus(){
   if (!all) st.textContent = 'Tes parties analysées apparaîtront ici.';
   else if (!todo) st.textContent = 'Analyse automatique : tes ' + all + ' parties sont analysées.';
   else if (BG.paused) st.textContent = 'Analyse en pause · ' + done + ' / ' + all + ' parties.';
-  else st.textContent = (realIds().some(function(id){ return !S.analyses[id]; }) ? 'Analyse automatique · ' : 'Mise à niveau Stockfish 17 · ') + done + ' / ' + all + ' parties' + (BG.running ? ' (en cours…)' : '');
+  else { var nf = bgFresh().length;
+    st.textContent = nf ? 'Nouvelles parties : aperçu rapide · encore ' + nf + (BG.running ? ' (en cours…)' : '')
+      : 'Analyse complète en fond · ' + done + ' / ' + all + ' parties' + (BG.running ? ' (en cours…)' : '') + '. Tu peux déjà ouvrir tes parties.'; }
 }
 function bgPump(){
+  // une nouvelle partie arrive pendant qu'on peaufine une ancienne : la nouvelle passe devant
+  if (BG.running && !BG.fresh && !BG.paused && bgFresh().length) { Run.token++; Engine.stop(); updateBgStatus(); return; }
   if (BG.paused || BG.running || Run.active) { updateBgStatus(); return; }
   var todo = bgTodo(); updateBgStatus();
   if (!todo.length) return;
   var id = todo[0];
+  BG.fresh = !S.analyses[id];
   BG.running = true; BG.id = id; BG.frac = 0;
   Run.token++;
   var last = 0;
-  analyzeGame(id, function(f){ BG.frac = f; if (Date.now() - last > 700) { last = Date.now(); updateBgStatus(); } })
+  analyzeGame(id, function(f){ BG.frac = f; if (Date.now() - last > 700) { last = Date.now(); updateBgStatus(); } }, BG.fresh ? 'eclair' : null)
     .then(function(){
       BG.running = false; BG.id = null;
       if (S.tab === 'parties') renderGames(); else if (S.tab === 'analyse' && S.cur === id) renderAnalysis();
       updateDue(); setTimeout(bgPump, 300);
-    }, function(){ BG.running = false; BG.id = null; setTimeout(bgPump, 1500); });
+    }, function(e){ BG.running = false; BG.id = null; setTimeout(bgPump, e && e.message === 'stop' ? 200 : 1500); });
 }
 $('#batchBtn').addEventListener('click', function(){
   BG.paused = !BG.paused;
@@ -1246,8 +1270,8 @@ function startAutoSync(){
   idleChip();
   if (STANDALONE) {
     Sync.available = true; idleChip();
-    var tk = function(){ if (!S.lastSync || Date.now() - S.lastSync > 10 * 60000) syncNow(true); else idleChip(); };
-    tk(); Sync.timer = setInterval(tk, 5 * 60000);
+    var tk = function(){ if (!S.lastSync || Date.now() - S.lastSync > 90000) syncNow(true); else idleChip(); };
+    tk(); Sync.timer = setInterval(tk, 2 * 60000);
     document.addEventListener('visibilitychange', function(){ if (!document.hidden) tk(); });
     return;
   }
@@ -1278,7 +1302,7 @@ function startAnalysis(id){
   prog.hidden = false; bar.style.width = '0%';
   $('#anaStatus').textContent = 'Analyse en cours…';
   renderAnalysis();
-  analyzeGame(id, function(f){ if (S.cur === id) { bar.style.width = (f * 100).toFixed(1) + '%'; $('#anaStatus').textContent = 'Analyse ' + Math.round(f * 100) + ' %'; } })
+  analyzeGame(id, function(f){ if (S.cur === id) { bar.style.width = (f * 100).toFixed(1) + '%'; $('#anaStatus').textContent = 'Analyse ' + Math.round(f * 100) + ' %'; } }, 'eclair')
     .then(function(){ if (S.cur === id) { prog.hidden = true; $('#anaStatus').textContent = ''; renderAnalysis(); } renderGamesIfVisible(); setTimeout(bgPump, 500); })
     .catch(function(e){ if (S.cur === id) { prog.hidden = true; $('#anaStatus').textContent = e && e.message === 'stop' ? 'Analyse interrompue.' : 'Analyse impossible.'; } setTimeout(bgPump, 1500); });
 }
